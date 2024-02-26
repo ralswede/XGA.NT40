@@ -194,4 +194,5 @@ extern VOID   vCpMmDestroyHeap(PPDEV ppdev) ;
 
 #define HOOKS_BMF8BPP   (HOOK_BITBLT     | HOOK_TEXTOUT     |       \
                          HOOK_COPYBITS   | HOOK_STROKEPATH | HOOK_PAINT)
-#define HOOKS_BMF16BPP 0
+#define HOOKS_BMF16BPP  (HOOK_BITBLT     | HOOK_TEXTOUT    | HOOK_COPYBITS | \
+                         HOOK_STROKEPATH | HOOK_PAINT)

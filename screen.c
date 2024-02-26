@@ -490,6 +490,8 @@ DEVINFO *pDevInfo)
     {
         pGdiInfo->ulNumColors = (ULONG)-1;
         pGdiInfo->ulNumPalReg = 0;
+		
+		pGdiInfo->flRaster = 0;
 
         pDevInfo->iDitherFormat = BMF_16BPP;
         pGdiInfo->ulHTOutputFormat = HT_FORMAT_16BPP;
@@ -589,14 +591,15 @@ DWORD *cbModeSize)
 
     //
     // Mode is rejected if it is not one plane, or not graphics, or is not
-    // one of 8 bits per pel.
+    // one of 8 bits per pel or 16 bits per pel.
     //
 
     while (ulTemp--)
     {
-        if ((pVideoTemp->NumberOfPlanes != 1 ) ||
-            !(pVideoTemp->AttributeFlags & VIDEO_MODE_GRAPHICS))
-			//|| (pVideoTemp->BitsPerPlane != 8))
+         if ((pVideoTemp->NumberOfPlanes != 1 ) ||
+            !(pVideoTemp->AttributeFlags & VIDEO_MODE_GRAPHICS) ||
+            ((pVideoTemp->BitsPerPlane != 8) &&
+             (pVideoTemp->BitsPerPlane != 16)))
         {
             pVideoTemp->Length = 0;
         }
