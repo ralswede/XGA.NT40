@@ -59,11 +59,13 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
                              sizeof (VIDEO_XGA_COPROCESSOR_INFORMATION),
                              &ReturnedDataLength)) {
 
+			DebugPrint(0, "IOCTL_VIDEO_XGA_MAP_COPROCESSOR - FAILED\n");
             DISPDBG((0, "XGA.DLL: Mapping Coprocessor failed - use banked framebuf\n"));
             return FALSE;
 
         }
 
+		DebugPrint(0, "IOCTL_VIDEO_XGA_MAP_COPROCESSOR - WORKED\n");
         // Set the globals, we will need these almost everywhere.
 
         ppdev->pXgaCpRegs        = CoProcessorInfo.CoProcessorVirtualAddress;
@@ -83,11 +85,11 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
                          NULL,
                          0,
                          &ReturnedDataLength)) {
-
+		DebugPrint(0, "IOCTL_VIDEO_SET_CURRENT_MODE - FAILED\n");
         RIP("XGA.DLL: Initialization error-Set mode\n");
         return FALSE;
     }
-
+	DebugPrint(0, "IOCTL_VIDEO_SET_CURRENT_MODE - WORKED\n");
     if (bFirst) {
 
         VideoMemory.RequestedVirtualAddress = NULL;
@@ -99,12 +101,13 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
                              (PVOID) &VideoMemoryInfo, // output buffer
                              sizeof (VideoMemoryInfo),
                              &ReturnedDataLength)) {
-
+			DebugPrint(0, "IOCTL_VIDEO_MAP_VIDEO_MEMORY - FAILED\n");
             RIP("XGA.DLL: Initialization error-Map buffer address\n");
             return FALSE;
 
         }
 
+		DebugPrint(0, "IOCTL_VIDEO_MAP_VIDEO_MEMORY - WORKED\n");
         ppdev->pjScreen = VideoMemoryInfo.FrameBufferBase;
         ppdev->ulScreenSize = VideoMemoryInfo.FrameBufferLength;
         ppdev->ulVideoMemorySize = VideoMemoryInfo.VideoRamLength;
@@ -121,8 +124,18 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
     ppdev->pXgaCpRegs->XGAPixMapBasePtr = ppdev->ulPhysFrameBuffer;
     ppdev->pXgaCpRegs->XGAPixMapWidth   = (USHORT) ppdev->cxScreen - 1;
     ppdev->pXgaCpRegs->XGAPixMapHeight  = (USHORT) ppdev->cyScreen - 1;
-    ppdev->pXgaCpRegs->XGAPixMapFormat  = PEL_MAP_FORMAT;
-
+	if (ppdev->ulBitCount == 16)  
+	{
+		ppdev->pXgaCpRegs->XGAPixMapFormat  = PEL_MAP_FORMAT_16;
+		DebugPrint(0, "XGAPixMapFormat 16\n");
+		
+	}
+	else
+	{
+		ppdev->pXgaCpRegs->XGAPixMapFormat  = PEL_MAP_FORMAT_8;
+		DebugPrint(0, "XGAPixMapFormat 8\n");
+	}
+	
     ppdev->pXgaCpRegs->XGADestColCompCond = CCCC_FALSE;
     ppdev->pXgaCpRegs->XGAPixelBitMask    = 0xFF;
 
@@ -175,7 +188,7 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
         //
         // private flag used for determining driver capabilities.
         //
-
+		DebugPrint(0, "Accelerations - WORKED\n");
 
         ppdev->ulfAccelerations_debug = CACHED_FONTS;
         ppdev->ulfBlitAccelerations_debug = SCRN_TO_SCRN_CPY | SOLID_PATTERN;
@@ -186,6 +199,7 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
         // !!! Turn off all accelerations for broken hardware !
         //
 
+		DebugPrint(0, "Accelerations - FAILED\n");
         ppdev->ulfAccelerations_debug = 0;
         ppdev->ulfBlitAccelerations_debug = 0;
 
@@ -318,20 +332,34 @@ DEVINFO *pDevInfo)
     ppdev->cyScreen = pVideoModeSelected->VisScreenHeight;
     ppdev->ulBitCount = pVideoModeSelected->BitsPerPlane *
                         pVideoModeSelected->NumberOfPlanes;
-    ppdev->lDeltaScreen = pVideoModeSelected->ScreenStride;
+						
+	pGdiInfo->ulHorzRes = ppdev->cxScreen;
+    pGdiInfo->ulVertRes = ppdev->cyScreen;
 
-    ppdev->flRed = pVideoModeSelected->RedMask;
-    ppdev->flGreen = pVideoModeSelected->GreenMask;
-    ppdev->flBlue = pVideoModeSelected->BlueMask;
+
+    //The mask should be 0xF800, 0x07E0, 0x001F for R/G/B as XGA uses 5:6:5 color 
+	if (ppdev->ulBitCount == 16) 
+	{	
+		ppdev->flRed = 0xF800;
+		ppdev->flGreen = 0x07E0;
+		ppdev->flBlue = 0x001F;
+	
+		ppdev->lDeltaScreen = pGdiInfo->ulHorzRes * 2;		
+	}
+	else
+	{
+		ppdev->flRed = pVideoModeSelected->RedMask;
+		ppdev->flGreen = pVideoModeSelected->GreenMask;
+		ppdev->flBlue = pVideoModeSelected->BlueMask;
+		ppdev->lDeltaScreen = pVideoModeSelected->ScreenStride;
+	}
 
 
     pGdiInfo->ulVersion    = GDI_DRIVER_VERSION;
     pGdiInfo->ulTechnology = DT_RASDISPLAY;
     pGdiInfo->ulHorzSize   = pVideoModeSelected->XMillimeter;
     pGdiInfo->ulVertSize   = pVideoModeSelected->YMillimeter;
-
-    pGdiInfo->ulHorzRes        = ppdev->cxScreen;
-    pGdiInfo->ulVertRes        = ppdev->cyScreen;
+   
     pGdiInfo->ulPanningHorzRes = ppdev->cxScreen;
     pGdiInfo->ulPanningVertRes = ppdev->cyScreen;
     pGdiInfo->cBitsPixel       = pVideoModeSelected->BitsPerPlane;

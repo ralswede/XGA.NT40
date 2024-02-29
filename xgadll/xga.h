@@ -7,7 +7,6 @@
 *
 \**************************************************************************/
 
-
 //
 // XGA I/O register definitions
 //
@@ -109,8 +108,12 @@
 #define PS_2_BIT    0x01
 #define PS_4_BIT    0x02
 #define PS_8_BIT    0x03
+#define PS_16_BIT   0x04
 
-#define PEL_MAP_FORMAT  (PO_INTEL | PS_8_BIT)
+//#define PEL_MAP_FORMAT  (PO_INTEL | PS_8_BIT)
+#define PEL_MAP_FORMAT_8   (PO_INTEL | PS_8_BIT)
+#define PEL_MAP_FORMAT_16  (PO_INTEL | PS_16_BIT)
+
 #define PATT_MAP_FORMAT  (PO_MOTOROLA | PS_1_BIT)
 
 #define XGA_0                           0x00    // XGA Mix functions
