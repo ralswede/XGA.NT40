@@ -11,6 +11,7 @@ typedef struct XGARegisters {             /* XGA CoProcessor Registers Overlay *
             UCHAR  XGAStateBLen;           // 0x0D
             USHORT XGAReserve2;
             UCHAR  XGAReserve3;
+   //volatile UCHAR  XGAAuxCoprocStat;          // 0x09 future enancement
    volatile UCHAR  XGACoprocCntl;          // 0x11
             UCHAR  XGAPixelMapIndex;       // 0x12
             UCHAR  XGAReserve4;

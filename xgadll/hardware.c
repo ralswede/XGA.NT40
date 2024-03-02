@@ -63,7 +63,8 @@ VOID vWaitForCoProcessor(PPDEV ppdev, ULONG ulDelay)
 	j=0;
     DISPDBG((3, "XGA.DLL!vWaitForCoProcessor - Entry\n"));
 
-    while (ppdev->pXgaCpRegs->XGACoprocCntl & 0x80)
+	while (ppdev->pXgaCpRegs->XGACoprocCntl & 0x80)
+	//while (ppdev->pXgaCpRegs->XGAAuxCoprocStat & 0x80)   //future enhancement 
     {
         for (i = 0; i < ulDelay; i++)
         {
