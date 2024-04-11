@@ -120,44 +120,43 @@ VMEM_CONTROL_REG, 0x00, 0x00,
 MEMACC_MODE_REG,  0x00, 0x04,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
-INDEX_REG,        0x10, 0x83,
+INDEX_REG,        0x10, 0x79,
 INDEX_REG,        0x11, 0x00,
 INDEX_REG,        0x12, 0x63,
 INDEX_REG,        0x13, 0x00,
 INDEX_REG,        0x14, 0x63,
 INDEX_REG,        0x15, 0x00,
-INDEX_REG,        0x16, 0x83,
+INDEX_REG,        0x16, 0x79,
 INDEX_REG,        0x17, 0x00,
-INDEX_REG,        0x18, 0x6B,
+INDEX_REG,        0x18, 0x68,
 INDEX_REG,        0x19, 0x00,
-INDEX_REG,        0x1A, 0x7B,
+INDEX_REG,        0x1A, 0x6F,
 INDEX_REG,        0x1B, 0x00,
-INDEX_REG,        0x1C, 0x20,
-INDEX_REG,        0x1E, 0x02,
-INDEX_REG,        0x20, 0x73,
+INDEX_REG,        0x1C, 0x00,
+INDEX_REG,        0x1E, 0x00,
+INDEX_REG,        0x20, 0x77,
 INDEX_REG,        0x21, 0x02,
 INDEX_REG,        0x22, 0x57,
 INDEX_REG,        0x23, 0x02,
 INDEX_REG,        0x24, 0x57,
 INDEX_REG,        0x25, 0x02,
-INDEX_REG,        0x26, 0x73,
+INDEX_REG,        0x26, 0x77,
 INDEX_REG,        0x27, 0x02,
-INDEX_REG,        0x28, 0x58,
+INDEX_REG,        0x28, 0x5A,
 INDEX_REG,        0x29, 0x02,
-INDEX_REG,        0x2A, 0x5C,
+INDEX_REG,        0x2A, 0x5E,
 INDEX_REG,        0x2C, 0xFF,
 INDEX_REG,        0x2D, 0xFF,
 INDEX_REG,        0x36, 0x00,
 INDEX_REG,        0x40, 0x00,
 INDEX_REG,        0x41, 0x00,
 INDEX_REG,        0x42, 0x00,
-INDEX_REG,        0x43, 0xA0,
+INDEX_REG,        0x43, 0xC8,
 INDEX_REG,        0x44, 0x00,
-INDEX_REG,        0x54, 0x01,
+INDEX_REG,        0x54, 0x00,
 INDEX_REG,        0x70, 0x00,
 INDEX_REG,        0x51, 0x04,
-INDEX_REG,        0x58, 0x4F,
-INDEX_REG,        0x54, 0x80,
+INDEX_REG,        0x58, 0x63,
 INDEX_REG,        0x50, 0xC7,
 INDEX_REG,        0x55, 0x00,
 INDEX_REG,        0x60, 0x00,
@@ -2502,9 +2501,9 @@ XGA_VIDEO_MODE XgaModes[] = {
       60,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      5,                           // Number Red pixels in DAC
-      6,                           // Number Green pixels in DAC
-      5,                           // Number Blue pixels in DAC
+      8,                           // Number Red pixels in DAC
+      8,                           // Number Green pixels in DAC
+      8,                           // Number Blue pixels in DAC
       0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes
@@ -2526,14 +2525,14 @@ XGA_VIDEO_MODE XgaModes[] = {
       1,                           // Number of video memory planes
       16,                           // Number of bits per plane
       72,                           // Screen Frequency, in Hertz
-      320,                         // Horizontal size of screen in millimeters
-      240,                         // Vertical size of screen in millimeters
-      5,                           // Number Red pixels in DAC
-      6,                           // Number Green pixels in DAC
-      5,                           // Number Blue pixels in DAC
-      0xF800,                  // Mask for Red Pixels in non-palette modes
+      328,                         // Horizontal size of screen in millimeters
+      242,                         // Vertical size of screen in millimeters
+      8,                           // Number Red pixels in DAC
+      8,                           // Number Green pixels in DAC
+      8,   
+	  0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
-      0x001F,                  // Mask for Blue Pixels in non-palette modes
+      0x001F,                  // Mask for Blue Pixels in non-palette modes                 
       VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 },  //end of 65536 for XGA2

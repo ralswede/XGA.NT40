@@ -343,15 +343,25 @@ DEVINFO *pDevInfo)
 		ppdev->flRed = 0xF800;
 		ppdev->flGreen = 0x07E0;
 		ppdev->flBlue = 0x001F;
+		
+		pGdiInfo->ulDACRed   = 5;
+		pGdiInfo->ulDACGreen = 6;
+		pGdiInfo->ulDACBlue  = 5;
 	
-		ppdev->lDeltaScreen = pGdiInfo->ulHorzRes * 2;		
+	    pGdiInfo->ulHTPatternSize = HT_PATSIZE_2x2_M;
+		ppdev->lDeltaScreen = pGdiInfo->ulHorzRes * 2;	
+		pGdiInfo->ulBltAlignment = 0; 
 	}
 	else
 	{
+	    pGdiInfo->ulDACRed   = pVideoModeSelected->NumberRedBits;
+		pGdiInfo->ulDACGreen = pVideoModeSelected->NumberGreenBits;
+		pGdiInfo->ulDACBlue  = pVideoModeSelected->NumberBlueBits;
 		ppdev->flRed = pVideoModeSelected->RedMask;
 		ppdev->flGreen = pVideoModeSelected->GreenMask;
 		ppdev->flBlue = pVideoModeSelected->BlueMask;
 		ppdev->lDeltaScreen = pVideoModeSelected->ScreenStride;
+		pGdiInfo->ulBltAlignment = 1; 
 	}
 
 
@@ -365,8 +375,6 @@ DEVINFO *pDevInfo)
     pGdiInfo->cBitsPixel       = pVideoModeSelected->BitsPerPlane;
     pGdiInfo->cPlanes          = pVideoModeSelected->NumberOfPlanes;
     pGdiInfo->ulVRefresh       = pVideoModeSelected->Frequency;
-    pGdiInfo->ulBltAlignment   = 1;   // We're not really accelerated, and
-                                      //   we don't care about window alignment
 
     pGdiInfo->ulLogPixelsX = pDevMode->dmLogPixels;
     pGdiInfo->ulLogPixelsY = pDevMode->dmLogPixels;
@@ -374,9 +382,7 @@ DEVINFO *pDevInfo)
     pGdiInfo->flTextCaps = TC_RA_ABLE;
     pGdiInfo->flRaster = 0;           // DDI reserves flRaster
 
-    pGdiInfo->ulDACRed   = pVideoModeSelected->NumberRedBits;
-    pGdiInfo->ulDACGreen = pVideoModeSelected->NumberGreenBits;
-    pGdiInfo->ulDACBlue  = pVideoModeSelected->NumberBlueBits;
+
 
     pGdiInfo->ulAspectX    = 0x24;    // One-to-one aspect ratio
     pGdiInfo->ulAspectY    = 0x24;
@@ -393,80 +399,35 @@ DEVINFO *pDevInfo)
 
     // RGB and CMY color info.
 
-    // try to get it from the miniport.
-    // if the miniport doesn ot support this feature, use defaults.
+    pGdiInfo->ciDevice.Red.x = 6700;
+    pGdiInfo->ciDevice.Red.y = 3300;
+    pGdiInfo->ciDevice.Red.Y = 0;
+    pGdiInfo->ciDevice.Green.x = 2100;
+    pGdiInfo->ciDevice.Green.y = 7100;
+    pGdiInfo->ciDevice.Green.Y = 0;
+    pGdiInfo->ciDevice.Blue.x = 1400;
+    pGdiInfo->ciDevice.Blue.y = 800;
+    pGdiInfo->ciDevice.Blue.Y = 0;
+    pGdiInfo->ciDevice.AlignmentWhite.x = 3127;
+    pGdiInfo->ciDevice.AlignmentWhite.y = 3290;
+    pGdiInfo->ciDevice.AlignmentWhite.Y = 0;
 
-    if (EngDeviceIoControl(ppdev->hDriver,
-                         IOCTL_VIDEO_QUERY_COLOR_CAPABILITIES,
-                         NULL,
-                         0,
-                         &colorCapabilities,
-                         sizeof(VIDEO_COLOR_CAPABILITIES),
-                         &ulTemp))
-    {
-        DISPDBG((1, "XGA DISP getcolorCapabilities failed \n"));
+    pGdiInfo->ciDevice.RedGamma = 20000;
+    pGdiInfo->ciDevice.GreenGamma = 20000;
+    pGdiInfo->ciDevice.BlueGamma = 20000;
 
-        pGdiInfo->ciDevice.Red.x = 6700;
-        pGdiInfo->ciDevice.Red.y = 3300;
-        pGdiInfo->ciDevice.Red.Y = 0;
-        pGdiInfo->ciDevice.Green.x = 2100;
-        pGdiInfo->ciDevice.Green.y = 7100;
-        pGdiInfo->ciDevice.Green.Y = 0;
-        pGdiInfo->ciDevice.Blue.x = 1400;
-        pGdiInfo->ciDevice.Blue.y = 800;
-        pGdiInfo->ciDevice.Blue.Y = 0;
-        pGdiInfo->ciDevice.AlignmentWhite.x = 3127;
-        pGdiInfo->ciDevice.AlignmentWhite.y = 3290;
-        pGdiInfo->ciDevice.AlignmentWhite.Y = 0;
-
-        pGdiInfo->ciDevice.RedGamma = 20000;
-        pGdiInfo->ciDevice.GreenGamma = 20000;
-        pGdiInfo->ciDevice.BlueGamma = 20000;
-
-    }
-    else
-    {
-
-        pGdiInfo->ciDevice.Red.x = colorCapabilities.RedChromaticity_x;
-        pGdiInfo->ciDevice.Red.y = colorCapabilities.RedChromaticity_y;
-        pGdiInfo->ciDevice.Red.Y = 0;
-        pGdiInfo->ciDevice.Green.x = colorCapabilities.GreenChromaticity_x;
-        pGdiInfo->ciDevice.Green.y = colorCapabilities.GreenChromaticity_y;
-        pGdiInfo->ciDevice.Green.Y = 0;
-        pGdiInfo->ciDevice.Blue.x = colorCapabilities.BlueChromaticity_x;
-        pGdiInfo->ciDevice.Blue.y = colorCapabilities.BlueChromaticity_y;
-        pGdiInfo->ciDevice.Blue.Y = 0;
-        pGdiInfo->ciDevice.AlignmentWhite.x = colorCapabilities.WhiteChromaticity_x;
-        pGdiInfo->ciDevice.AlignmentWhite.y = colorCapabilities.WhiteChromaticity_y;
-        pGdiInfo->ciDevice.AlignmentWhite.Y = colorCapabilities.WhiteChromaticity_Y;
-
-        // if we have a color device store the three color gamma values,
-        // otherwise store the unique gamma value in all three.
-
-        if (colorCapabilities.AttributeFlags & VIDEO_DEVICE_COLOR)
-        {
-            pGdiInfo->ciDevice.RedGamma = colorCapabilities.RedGamma;
-            pGdiInfo->ciDevice.GreenGamma = colorCapabilities.GreenGamma;
-            pGdiInfo->ciDevice.BlueGamma = colorCapabilities.BlueGamma;
-        }
-        else
-        {
-            pGdiInfo->ciDevice.RedGamma = colorCapabilities.WhiteGamma;
-            pGdiInfo->ciDevice.GreenGamma = colorCapabilities.WhiteGamma;
-            pGdiInfo->ciDevice.BlueGamma = colorCapabilities.WhiteGamma;
-        }
-
-    };
-
-    pGdiInfo->ciDevice.Cyan.x = 0;
-    pGdiInfo->ciDevice.Cyan.y = 0;
+	pGdiInfo->ciDevice.Cyan.x = 1750;
+    pGdiInfo->ciDevice.Cyan.y = 3950;
     pGdiInfo->ciDevice.Cyan.Y = 0;
-    pGdiInfo->ciDevice.Magenta.x = 0;
-    pGdiInfo->ciDevice.Magenta.y = 0;
+    pGdiInfo->ciDevice.Magenta.x = 4050;
+    pGdiInfo->ciDevice.Magenta.y = 2050;
     pGdiInfo->ciDevice.Magenta.Y = 0;
-    pGdiInfo->ciDevice.Yellow.x = 0;
-    pGdiInfo->ciDevice.Yellow.y = 0;
+    pGdiInfo->ciDevice.Yellow.x = 4400;
+    pGdiInfo->ciDevice.Yellow.y = 5200;
     pGdiInfo->ciDevice.Yellow.Y = 0;
+    pGdiInfo->ciDevice.AlignmentWhite.x = 3127;
+    pGdiInfo->ciDevice.AlignmentWhite.y = 3290;
+    pGdiInfo->ciDevice.AlignmentWhite.Y = 0;
 
     // No dye correction for raster displays.
 
@@ -518,8 +479,6 @@ DEVINFO *pDevInfo)
     {
         pGdiInfo->ulNumColors = (ULONG)-1;
         pGdiInfo->ulNumPalReg = 0;
-		
-		pGdiInfo->flRaster = 0;
 
         pDevInfo->iDitherFormat = BMF_16BPP;
         pGdiInfo->ulHTOutputFormat = HT_FORMAT_16BPP;
