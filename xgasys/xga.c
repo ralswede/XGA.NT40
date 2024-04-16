@@ -996,6 +996,27 @@ Return Value:
 
     }
 
+    //
+    // Now try the same at another video memory location between 1 and 2 MEG.
+    //
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | APP_INDEX_REG), 0x28);
+
+    if (*videoMemory == testValue) {
+
+        testValue >>= 1;
+
+    }
+
+    *videoMemory = testValue;
+
+    if (*videoMemory == testValue) {
+
+        hwDeviceExtension->FrameBufferLength = 0x00200000;
+
+    }
+
     VideoDebugPrint((2, "XgaInitialize\n  The amount of memory on the card is %d K\n",
                    hwDeviceExtension->FrameBufferLength >> 10));
 
