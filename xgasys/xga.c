@@ -438,8 +438,8 @@ Return Value:
 
         VideoDebugPrint((1, "Xga: trying the 1 MEG aperture\n"));
 
-        hwDeviceExtension->FrameBufferLength = 0x00100000;
-        hwDeviceExtension->PhysicalVideoMemoryLength = 0x00100000;
+        hwDeviceExtension->FrameBufferLength = 0x00200000;
+        hwDeviceExtension->PhysicalVideoMemoryLength = 0x00200000;
 
         hwDeviceExtension->PhysicalVideoMemoryAddress.HighPart = 0x00000000;
         hwDeviceExtension->PhysicalVideoMemoryAddress.LowPart =
@@ -471,8 +471,8 @@ Return Value:
 
         framebufMode = TRUE;
 
-        hwDeviceExtension->FrameBufferLength = 0x00100000;
-        hwDeviceExtension->PhysicalVideoMemoryLength = 0x00010000;
+        hwDeviceExtension->FrameBufferLength = 0x00200000;
+        hwDeviceExtension->PhysicalVideoMemoryLength = 0x00020000;
 
         hwDeviceExtension->PhysicalVideoMemoryAddress.HighPart = 0x00000000;
         hwDeviceExtension->PhysicalVideoMemoryAddress.LowPart = 0x000A0000;
@@ -549,7 +549,7 @@ Return Value:
     //
 
     accessRange[5].RangeStart = A0000PhysicalAddress;
-    accessRange[5].RangeLength = 0x00010000;
+    accessRange[5].RangeLength = 0x00020000;
     accessRange[5].RangeInIoSpace = FALSE;
     accessRange[5].RangeVisible = FALSE;
     accessRange[5].RangeShareable = TRUE;
@@ -988,7 +988,7 @@ Return Value:
 
     if (*videoMemory == testValue) {
 
-        hwDeviceExtension->FrameBufferLength = 0x00100000;
+        hwDeviceExtension->FrameBufferLength = 0x00200000;
 
     } else {
 

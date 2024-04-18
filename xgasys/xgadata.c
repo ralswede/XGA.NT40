@@ -229,7 +229,7 @@ INDEX_REG,        0x64, 0xFF,
 END_OF_SWITCH
 };
 
-MODE_REGISTER_DATA_TABLE XGA2_MODE_1280x1024x65536x60Hz[] = {
+MODE_REGISTER_DATA_TABLE XGA2_1024x768x65536x60Hz[] = {
 
 INT_ENABLE_REG,   0x00, 0x00,
 INT_STATUS_REG,   0x00, 0xFF,
@@ -241,45 +241,525 @@ VMEM_CONTROL_REG, 0x00, 0x00,
 MEMACC_MODE_REG,  0x00, 0x04,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
-INDEX_REG,        0x10, 0xE3,
+INDEX_REG,        0x10, 0xA7,
 INDEX_REG,        0x11, 0x00,
-INDEX_REG,        0x12, 0x9F,
+INDEX_REG,        0x12, 0x7F,
 INDEX_REG,        0x13, 0x00,
-INDEX_REG,        0x14, 0x9F,
+INDEX_REG,        0x14, 0x7F,
 INDEX_REG,        0x15, 0x00,
-INDEX_REG,        0x16, 0xE3,
+INDEX_REG,        0x16, 0xA7,
 INDEX_REG,        0x17, 0x00,
-INDEX_REG,        0x18, 0xB1,
+INDEX_REG,        0x18, 0x88,
 INDEX_REG,        0x19, 0x00,
-INDEX_REG,        0x1A, 0xDF,
+INDEX_REG,        0x1A, 0x99,
 INDEX_REG,        0x1B, 0x00,
-INDEX_REG,        0x1C, 0x00,
-INDEX_REG,        0x1E, 0x00,
-INDEX_REG,        0x20, 0x48,
-INDEX_REG,        0x21, 0x04,
+INDEX_REG,        0x1C, 0x20,
+INDEX_REG,        0x1E, 0x02,
+INDEX_REG,        0x20, 0x25,
+INDEX_REG,        0x21, 0x03,
 INDEX_REG,        0x22, 0xFF,
-INDEX_REG,        0x23, 0x03,
+INDEX_REG,        0x23, 0x02,
 INDEX_REG,        0x24, 0xFF,
-INDEX_REG,        0x25, 0x03,
-INDEX_REG,        0x26, 0x48,
-INDEX_REG,        0x27, 0x04,
-INDEX_REG,        0x28, 0x06,
-INDEX_REG,        0x29, 0x04,
-INDEX_REG,        0x2A, 0x0E,
+INDEX_REG,        0x25, 0x02,
+INDEX_REG,        0x26, 0x25,
+INDEX_REG,        0x27, 0x03,
+INDEX_REG,        0x28, 0x02,
+INDEX_REG,        0x29, 0x03,
+INDEX_REG,        0x2A, 0x08,
 INDEX_REG,        0x2C, 0xFF,
 INDEX_REG,        0x2D, 0xFF,
 INDEX_REG,        0x36, 0x00,
 INDEX_REG,        0x40, 0x00,
 INDEX_REG,        0x41, 0x00,
 INDEX_REG,        0x42, 0x00,
-INDEX_REG,        0x43, 0xC8,
-INDEX_REG,        0x44, 0x00,
+INDEX_REG,        0x43, 0x00,
+INDEX_REG,        0x44, 0x01,
 INDEX_REG,        0x54, 0x01,
 INDEX_REG,        0x70, 0x00,
 INDEX_REG,        0x51, 0x04,
-INDEX_REG,        0x58, 0xA9,
-INDEX_REG,        0x54, 0x80,
-INDEX_REG,        0x50, 0xC7,
+INDEX_REG,        0x58, 0x80,
+INDEX_REG,        0x54, 0x81,
+INDEX_REG,        0x50, 0x07,
+INDEX_REG,        0x55, 0x00,
+INDEX_REG,        0x60, 0x00,
+INDEX_REG,        0x61, 0x00,
+INDEX_REG,        0x62, 0x00,
+INDEX_REG,        0x63, 0x00,
+INDEX_REG,        0x64, 0xFF,
+END_OF_SWITCH
+};
+
+MODE_REGISTER_DATA_TABLE XGA2_1024x768x65536x70Hz[] = {
+
+INT_ENABLE_REG,   0x00, 0x00,
+INT_STATUS_REG,   0x00, 0xFF,
+OP_MODE_REG,      0x00, 0x04,
+INDEX_REG,        0x64, 0x00,
+APP_CTL_REG,      0x00, 0x00,
+APP_INDEX_REG,    0x00, 0x00,
+VMEM_CONTROL_REG, 0x00, 0x00,
+MEMACC_MODE_REG,  0x00, 0x04,
+INDEX_REG,        0x50, 0x01,
+INDEX_REG,        0x50, 0x00,
+INDEX_REG,        0x10, 0xA5,
+INDEX_REG,        0x11, 0x00,
+INDEX_REG,        0x12, 0x7F,
+INDEX_REG,        0x13, 0x00,
+INDEX_REG,        0x14, 0x7F,
+INDEX_REG,        0x15, 0x00,
+INDEX_REG,        0x16, 0xA5,
+INDEX_REG,        0x17, 0x00,
+INDEX_REG,        0x18, 0x88,
+INDEX_REG,        0x19, 0x00,
+INDEX_REG,        0x1A, 0x99,
+INDEX_REG,        0x1B, 0x00,
+INDEX_REG,        0x1C, 0x20,
+INDEX_REG,        0x1E, 0x00,
+INDEX_REG,        0x20, 0x25,
+INDEX_REG,        0x21, 0x03,
+INDEX_REG,        0x22, 0xFF,
+INDEX_REG,        0x23, 0x02,
+INDEX_REG,        0x24, 0xFF,
+INDEX_REG,        0x25, 0x02,
+INDEX_REG,        0x26, 0x25,
+INDEX_REG,        0x27, 0x03,
+INDEX_REG,        0x28, 0x02,
+INDEX_REG,        0x29, 0x03,
+INDEX_REG,        0x2A, 0x08,
+INDEX_REG,        0x2C, 0xFF,
+INDEX_REG,        0x2D, 0xFF,
+INDEX_REG,        0x36, 0x00,
+INDEX_REG,        0x40, 0x00,
+INDEX_REG,        0x41, 0x00,
+INDEX_REG,        0x42, 0x00,
+INDEX_REG,        0x43, 0x00,
+INDEX_REG,        0x44, 0x01,
+INDEX_REG,        0x54, 0x01,
+INDEX_REG,        0x70, 0x00,
+INDEX_REG,        0x51, 0x04,
+INDEX_REG,        0x58, 0x8A,
+INDEX_REG,        0x54, 0x81,
+INDEX_REG,        0x50, 0x07,
+INDEX_REG,        0x55, 0x00,
+INDEX_REG,        0x60, 0x00,
+INDEX_REG,        0x61, 0x00,
+INDEX_REG,        0x62, 0x00,
+INDEX_REG,        0x63, 0x00,
+INDEX_REG,        0x64, 0xFF,
+END_OF_SWITCH
+};
+
+MODE_REGISTER_DATA_TABLE XGA2_1104x828x65536x72Hz[] = {
+
+INT_ENABLE_REG,   0x00, 0x00,
+INT_STATUS_REG,   0x00, 0xFF,
+OP_MODE_REG,      0x00, 0x04,
+INDEX_REG,        0x64, 0x00,
+APP_CTL_REG,      0x00, 0x00,
+APP_INDEX_REG,    0x00, 0x00,
+VMEM_CONTROL_REG, 0x00, 0x00,
+MEMACC_MODE_REG,  0x00, 0x04,
+INDEX_REG,        0x50, 0x01,
+INDEX_REG,        0x50, 0x00,
+INDEX_REG,        0x10, 0xB2,
+INDEX_REG,        0x11, 0x00,
+INDEX_REG,        0x12, 0x89,
+INDEX_REG,        0x13, 0x00,
+INDEX_REG,        0x14, 0x89,
+INDEX_REG,        0x15, 0x00,
+INDEX_REG,        0x16, 0xB2,
+INDEX_REG,        0x17, 0x00,
+INDEX_REG,        0x18, 0x90,
+INDEX_REG,        0x19, 0x00,
+INDEX_REG,        0x1A, 0xAB,
+INDEX_REG,        0x1B, 0x00,
+INDEX_REG,        0x1C, 0x00,
+INDEX_REG,        0x1E, 0x00,
+INDEX_REG,        0x20, 0x58,
+INDEX_REG,        0x21, 0x03,
+INDEX_REG,        0x22, 0x3B,
+INDEX_REG,        0x23, 0x03,
+INDEX_REG,        0x24, 0x3B,
+INDEX_REG,        0x25, 0x03,
+INDEX_REG,        0x26, 0x58,
+INDEX_REG,        0x27, 0x03,
+INDEX_REG,        0x28, 0x3B,
+INDEX_REG,        0x29, 0x03,
+INDEX_REG,        0x2A, 0x42,
+INDEX_REG,        0x2C, 0xFF,
+INDEX_REG,        0x2D, 0xFF,
+INDEX_REG,        0x36, 0x00,
+INDEX_REG,        0x40, 0x00,
+INDEX_REG,        0x41, 0x00,
+INDEX_REG,        0x42, 0x00,
+INDEX_REG,        0x43, 0x14,
+INDEX_REG,        0x44, 0x01,
+INDEX_REG,        0x54, 0x01,
+INDEX_REG,        0x70, 0x00,
+INDEX_REG,        0x51, 0x04,
+INDEX_REG,        0x58, 0x99,
+INDEX_REG,        0x54, 0x81,
+INDEX_REG,        0x50, 0x07,
+INDEX_REG,        0x55, 0x00,
+INDEX_REG,        0x60, 0x00,
+INDEX_REG,        0x61, 0x00,
+INDEX_REG,        0x62, 0x00,
+INDEX_REG,        0x63, 0x00,
+INDEX_REG,        0x64, 0xFF,
+END_OF_SWITCH
+};
+
+MODE_REGISTER_DATA_TABLE XGA2_1104x828x65536x75Hz[] = {
+
+INT_ENABLE_REG,   0x00, 0x00,
+INT_STATUS_REG,   0x00, 0xFF,
+OP_MODE_REG,      0x00, 0x04,
+INDEX_REG,        0x64, 0x00,
+APP_CTL_REG,      0x00, 0x00,
+APP_INDEX_REG,    0x00, 0x00,
+VMEM_CONTROL_REG, 0x00, 0x00,
+MEMACC_MODE_REG,  0x00, 0x04,
+INDEX_REG,        0x50, 0x01,
+INDEX_REG,        0x50, 0x00,
+INDEX_REG,        0x10, 0xB2,
+INDEX_REG,        0x11, 0x00,
+INDEX_REG,        0x12, 0x89,
+INDEX_REG,        0x13, 0x00,
+INDEX_REG,        0x14, 0x89,
+INDEX_REG,        0x15, 0x00,
+INDEX_REG,        0x16, 0xB2,
+INDEX_REG,        0x17, 0x00,
+INDEX_REG,        0x18, 0x90,
+INDEX_REG,        0x19, 0x00,
+INDEX_REG,        0x1A, 0xAB,
+INDEX_REG,        0x1B, 0x00,
+INDEX_REG,        0x1C, 0x00,
+INDEX_REG,        0x1E, 0x00,
+INDEX_REG,        0x20, 0x58,
+INDEX_REG,        0x21, 0x03,
+INDEX_REG,        0x22, 0x3B,
+INDEX_REG,        0x23, 0x03,
+INDEX_REG,        0x24, 0x3B,
+INDEX_REG,        0x25, 0x03,
+INDEX_REG,        0x26, 0x58,
+INDEX_REG,        0x27, 0x03,
+INDEX_REG,        0x28, 0x3B,
+INDEX_REG,        0x29, 0x03,
+INDEX_REG,        0x2A, 0x42,
+INDEX_REG,        0x2C, 0xFF,
+INDEX_REG,        0x2D, 0xFF,
+INDEX_REG,        0x36, 0x00,
+INDEX_REG,        0x40, 0x00,
+INDEX_REG,        0x41, 0x00,
+INDEX_REG,        0x42, 0x00,
+INDEX_REG,        0x43, 0x14,
+INDEX_REG,        0x44, 0x01,
+INDEX_REG,        0x54, 0x01,
+INDEX_REG,        0x70, 0x00,
+INDEX_REG,        0x51, 0x04,
+INDEX_REG,        0x58, 0x9C,
+INDEX_REG,        0x54, 0x81,
+INDEX_REG,        0x50, 0x07,
+INDEX_REG,        0x55, 0x00,
+INDEX_REG,        0x60, 0x00,
+INDEX_REG,        0x61, 0x00,
+INDEX_REG,        0x62, 0x00,
+INDEX_REG,        0x63, 0x00,
+INDEX_REG,        0x64, 0xFF,
+END_OF_SWITCH
+};
+
+MODE_REGISTER_DATA_TABLE XGA2_1104x828x65536x78Hz[] = {
+
+INT_ENABLE_REG,   0x00, 0x00,
+INT_STATUS_REG,   0x00, 0xFF,
+OP_MODE_REG,      0x00, 0x04,
+INDEX_REG,        0x64, 0x00,
+APP_CTL_REG,      0x00, 0x00,
+APP_INDEX_REG,    0x00, 0x00,
+VMEM_CONTROL_REG, 0x00, 0x00,
+MEMACC_MODE_REG,  0x00, 0x04,
+INDEX_REG,        0x50, 0x01,
+INDEX_REG,        0x50, 0x00,
+INDEX_REG,        0x10, 0xB2,
+INDEX_REG,        0x11, 0x00,
+INDEX_REG,        0x12, 0x89,
+INDEX_REG,        0x13, 0x00,
+INDEX_REG,        0x14, 0x89,
+INDEX_REG,        0x15, 0x00,
+INDEX_REG,        0x16, 0xB2,
+INDEX_REG,        0x17, 0x00,
+INDEX_REG,        0x18, 0x90,
+INDEX_REG,        0x19, 0x00,
+INDEX_REG,        0x1A, 0xAB,
+INDEX_REG,        0x1B, 0x00,
+INDEX_REG,        0x1C, 0x00,
+INDEX_REG,        0x1E, 0x00,
+INDEX_REG,        0x20, 0x58,
+INDEX_REG,        0x21, 0x03,
+INDEX_REG,        0x22, 0x3B,
+INDEX_REG,        0x23, 0x03,
+INDEX_REG,        0x24, 0x3B,
+INDEX_REG,        0x25, 0x03,
+INDEX_REG,        0x26, 0x58,
+INDEX_REG,        0x27, 0x03,
+INDEX_REG,        0x28, 0x3B,
+INDEX_REG,        0x29, 0x03,
+INDEX_REG,        0x2A, 0x42,
+INDEX_REG,        0x2C, 0xFF,
+INDEX_REG,        0x2D, 0xFF,
+INDEX_REG,        0x36, 0x00,
+INDEX_REG,        0x40, 0x00,
+INDEX_REG,        0x41, 0x00,
+INDEX_REG,        0x42, 0x00,
+INDEX_REG,        0x43, 0x14,
+INDEX_REG,        0x44, 0x01,
+INDEX_REG,        0x54, 0x01,
+INDEX_REG,        0x70, 0x00,
+INDEX_REG,        0x51, 0x04,
+INDEX_REG,        0x58, 0x9C,
+INDEX_REG,        0x54, 0x81,
+INDEX_REG,        0x50, 0x07,
+INDEX_REG,        0x55, 0x00,
+INDEX_REG,        0x60, 0x00,
+INDEX_REG,        0x61, 0x00,
+INDEX_REG,        0x62, 0x00,
+INDEX_REG,        0x63, 0x00,
+INDEX_REG,        0x64, 0xFF,
+END_OF_SWITCH
+};
+
+MODE_REGISTER_DATA_TABLE XGA2_1120x840x65536x75Hz[] = {
+
+INT_ENABLE_REG,   0x00, 0x00,
+INT_STATUS_REG,   0x00, 0xFF,
+OP_MODE_REG,      0x00, 0x04,
+INDEX_REG,        0x64, 0x00,
+APP_CTL_REG,      0x00, 0x00,
+APP_INDEX_REG,    0x00, 0x00,
+VMEM_CONTROL_REG, 0x00, 0x00,
+MEMACC_MODE_REG,  0x00, 0x04,
+INDEX_REG,        0x50, 0x01,
+INDEX_REG,        0x50, 0x00,
+INDEX_REG,        0x10, 0xB4,
+INDEX_REG,        0x11, 0x00,
+INDEX_REG,        0x12, 0x8B,
+INDEX_REG,        0x13, 0x00,
+INDEX_REG,        0x14, 0x89,
+INDEX_REG,        0x15, 0x00,
+INDEX_REG,        0x16, 0xB4,
+INDEX_REG,        0x17, 0x00,
+INDEX_REG,        0x18, 0x92,
+INDEX_REG,        0x19, 0x00,
+INDEX_REG,        0x1A, 0xAD,
+INDEX_REG,        0x1B, 0x00,
+INDEX_REG,        0x1C, 0x00,
+INDEX_REG,        0x1E, 0x00,
+INDEX_REG,        0x20, 0x65,
+INDEX_REG,        0x21, 0x03,
+INDEX_REG,        0x22, 0x47,
+INDEX_REG,        0x23, 0x03,
+INDEX_REG,        0x24, 0x47,
+INDEX_REG,        0x25, 0x03,
+INDEX_REG,        0x26, 0x65,
+INDEX_REG,        0x27, 0x03,
+INDEX_REG,        0x28, 0x47,
+INDEX_REG,        0x29, 0x03,
+INDEX_REG,        0x2A, 0x4E,
+INDEX_REG,        0x2C, 0xFF,
+INDEX_REG,        0x2D, 0xFF,
+INDEX_REG,        0x36, 0x00,
+INDEX_REG,        0x40, 0x00,
+INDEX_REG,        0x41, 0x00,
+INDEX_REG,        0x42, 0x00,
+INDEX_REG,        0x43, 0x18,
+INDEX_REG,        0x44, 0x01,
+INDEX_REG,        0x54, 0x01,
+INDEX_REG,        0x70, 0x00,
+INDEX_REG,        0x51, 0x04,
+INDEX_REG,        0x58, 0x9D,
+INDEX_REG,        0x54, 0x81,
+INDEX_REG,        0x50, 0x07,
+INDEX_REG,        0x55, 0x00,
+INDEX_REG,        0x60, 0x00,
+INDEX_REG,        0x61, 0x00,
+INDEX_REG,        0x62, 0x00,
+INDEX_REG,        0x63, 0x00,
+INDEX_REG,        0x64, 0xFF,
+END_OF_SWITCH
+};
+
+MODE_REGISTER_DATA_TABLE XGA2_1160x870x65536x65Hz[] = {
+
+INT_ENABLE_REG,   0x00, 0x00,
+INT_STATUS_REG,   0x00, 0xFF,
+OP_MODE_REG,      0x00, 0x04,
+INDEX_REG,        0x64, 0x00,
+APP_CTL_REG,      0x00, 0x00,
+APP_INDEX_REG,    0x00, 0x00,
+VMEM_CONTROL_REG, 0x00, 0x00,
+MEMACC_MODE_REG,  0x00, 0x04,
+INDEX_REG,        0x50, 0x01,
+INDEX_REG,        0x50, 0x00,
+INDEX_REG,        0x10, 0xBA,
+INDEX_REG,        0x11, 0x00,
+INDEX_REG,        0x12, 0x90,
+INDEX_REG,        0x13, 0x00,
+INDEX_REG,        0x14, 0x90,
+INDEX_REG,        0x15, 0x00,
+INDEX_REG,        0x16, 0xBA,
+INDEX_REG,        0x17, 0x00,
+INDEX_REG,        0x18, 0x97,
+INDEX_REG,        0x19, 0x00,
+INDEX_REG,        0x1A, 0xB3,
+INDEX_REG,        0x1B, 0x00,
+INDEX_REG,        0x1C, 0x00,
+INDEX_REG,        0x1E, 0x00,
+INDEX_REG,        0x20, 0x83,
+INDEX_REG,        0x21, 0x03,
+INDEX_REG,        0x22, 0x65,
+INDEX_REG,        0x23, 0x03,
+INDEX_REG,        0x24, 0x65,
+INDEX_REG,        0x25, 0x03,
+INDEX_REG,        0x26, 0x83,
+INDEX_REG,        0x27, 0x03,
+INDEX_REG,        0x28, 0x65,
+INDEX_REG,        0x29, 0x03,
+INDEX_REG,        0x2A, 0x6C,
+INDEX_REG,        0x2C, 0xFF,
+INDEX_REG,        0x2D, 0xFF,
+INDEX_REG,        0x36, 0x00,
+INDEX_REG,        0x40, 0x00,
+INDEX_REG,        0x41, 0x00,
+INDEX_REG,        0x42, 0x00,
+INDEX_REG,        0x43, 0x22,
+INDEX_REG,        0x44, 0x01,
+INDEX_REG,        0x54, 0x01,
+INDEX_REG,        0x70, 0x00,
+INDEX_REG,        0x51, 0x04,
+INDEX_REG,        0x58, 0x99,
+INDEX_REG,        0x54, 0x81,
+INDEX_REG,        0x50, 0x07,
+INDEX_REG,        0x55, 0x00,
+INDEX_REG,        0x60, 0x00,
+INDEX_REG,        0x61, 0x00,
+INDEX_REG,        0x62, 0x00,
+INDEX_REG,        0x63, 0x00,
+INDEX_REG,        0x64, 0xFF,
+END_OF_SWITCH
+};
+
+MODE_REGISTER_DATA_TABLE XGA2_1160x870x65536x70Hz[] = {
+
+INT_ENABLE_REG,   0x00, 0x00,
+INT_STATUS_REG,   0x00, 0xFF,
+OP_MODE_REG,      0x00, 0x04,
+INDEX_REG,        0x64, 0x00,
+APP_CTL_REG,      0x00, 0x00,
+APP_INDEX_REG,    0x00, 0x00,
+VMEM_CONTROL_REG, 0x00, 0x00,
+MEMACC_MODE_REG,  0x00, 0x04,
+INDEX_REG,        0x50, 0x01,
+INDEX_REG,        0x50, 0x00,
+INDEX_REG,        0x10, 0xBA,
+INDEX_REG,        0x11, 0x00,
+INDEX_REG,        0x12, 0x90,
+INDEX_REG,        0x13, 0x00,
+INDEX_REG,        0x14, 0x90,
+INDEX_REG,        0x15, 0x00,
+INDEX_REG,        0x16, 0xBA,
+INDEX_REG,        0x17, 0x00,
+INDEX_REG,        0x18, 0x97,
+INDEX_REG,        0x19, 0x00,
+INDEX_REG,        0x1A, 0xB3,
+INDEX_REG,        0x1B, 0x00,
+INDEX_REG,        0x1C, 0x00,
+INDEX_REG,        0x1E, 0x00,
+INDEX_REG,        0x20, 0x83,
+INDEX_REG,        0x21, 0x03,
+INDEX_REG,        0x22, 0x65,
+INDEX_REG,        0x23, 0x03,
+INDEX_REG,        0x24, 0x65,
+INDEX_REG,        0x25, 0x03,
+INDEX_REG,        0x26, 0x83,
+INDEX_REG,        0x27, 0x03,
+INDEX_REG,        0x28, 0x65,
+INDEX_REG,        0x29, 0x03,
+INDEX_REG,        0x2A, 0x6C,
+INDEX_REG,        0x2C, 0xFF,
+INDEX_REG,        0x2D, 0xFF,
+INDEX_REG,        0x36, 0x00,
+INDEX_REG,        0x40, 0x00,
+INDEX_REG,        0x41, 0x00,
+INDEX_REG,        0x42, 0x00,
+INDEX_REG,        0x43, 0x22,
+INDEX_REG,        0x44, 0x01,
+INDEX_REG,        0x54, 0x01,
+INDEX_REG,        0x70, 0x00,
+INDEX_REG,        0x51, 0x04,
+INDEX_REG,        0x58, 0x9D,
+INDEX_REG,        0x54, 0x81,
+INDEX_REG,        0x50, 0x07,
+INDEX_REG,        0x55, 0x00,
+INDEX_REG,        0x60, 0x00,
+INDEX_REG,        0x61, 0x00,
+INDEX_REG,        0x62, 0x00,
+INDEX_REG,        0x63, 0x00,
+INDEX_REG,        0x64, 0xFF,
+END_OF_SWITCH
+};
+
+MODE_REGISTER_DATA_TABLE XGA2_1280x800x65536x75Hz[] = {
+
+INT_ENABLE_REG,   0x00, 0x00,
+INT_STATUS_REG,   0x00, 0xFF,
+OP_MODE_REG,      0x00, 0x04,
+INDEX_REG,        0x64, 0x00,
+APP_CTL_REG,      0x00, 0x00,
+APP_INDEX_REG,    0x00, 0x00,
+VMEM_CONTROL_REG, 0x00, 0x00,
+MEMACC_MODE_REG,  0x00, 0x04,
+INDEX_REG,        0x50, 0x01,
+INDEX_REG,        0x50, 0x00,
+INDEX_REG,        0x10, 0xCC,
+INDEX_REG,        0x11, 0x00,
+INDEX_REG,        0x12, 0x9F,
+INDEX_REG,        0x13, 0x00,
+INDEX_REG,        0x14, 0x9F,
+INDEX_REG,        0x15, 0x00,
+INDEX_REG,        0x16, 0xCC,
+INDEX_REG,        0x17, 0x00,
+INDEX_REG,        0x18, 0xA6,
+INDEX_REG,        0x19, 0x00,
+INDEX_REG,        0x1A, 0xC3,
+INDEX_REG,        0x1B, 0x00,
+INDEX_REG,        0x1C, 0x00,
+INDEX_REG,        0x1E, 0x00,
+INDEX_REG,        0x20, 0x39,
+INDEX_REG,        0x21, 0x03,
+INDEX_REG,        0x22, 0x1F,
+INDEX_REG,        0x23, 0x03,
+INDEX_REG,        0x24, 0x1F,
+INDEX_REG,        0x25, 0x03,
+INDEX_REG,        0x26, 0x39,
+INDEX_REG,        0x27, 0x03,
+INDEX_REG,        0x28, 0x1F,
+INDEX_REG,        0x29, 0x03,
+INDEX_REG,        0x2A, 0x26,
+INDEX_REG,        0x2C, 0xFF,
+INDEX_REG,        0x2D, 0xFF,
+INDEX_REG,        0x36, 0x00,
+INDEX_REG,        0x40, 0x00,
+INDEX_REG,        0x41, 0x00,
+INDEX_REG,        0x42, 0x00,
+INDEX_REG,        0x43, 0x40,
+INDEX_REG,        0x44, 0x01,
+INDEX_REG,        0x54, 0x01,
+INDEX_REG,        0x70, 0x00,
+INDEX_REG,        0x51, 0x04,
+INDEX_REG,        0x58, 0xA5,
+INDEX_REG,        0x54, 0x81,
+INDEX_REG,        0x50, 0x07,
 INDEX_REG,        0x55, 0x00,
 INDEX_REG,        0x60, 0x00,
 INDEX_REG,        0x61, 0x00,
@@ -812,7 +1292,7 @@ INDEX_REG,        0x2D, 0xFF,
 INDEX_REG,        0x54, 0x01,
 INDEX_REG,        0x70, 0x00,
 INDEX_REG,        0x58, 0x80,
-INDEX_OR_REG,     0x5B, 0x02,
+INDEX_REG,     0x5B, 0x02,
 INDEX_REG,        0x54, 0x81,
 INDEX_REG,        0x50, 0xC7,
 INDEX_REG,        0x40, 0x00,
@@ -2719,9 +3199,9 @@ XGA_VIDEO_MODE XgaModes[] = {
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
       VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
-},  //end of 65536 for XGA2
+},  
 {
-	//Added by Ryan Alswede
+	
   NULL,         					// Mode setting table for XGA 1
   XGA2_MODE_800x600x65536x70Hz,     // Mode setting table for XGA 2
     {
@@ -2745,17 +3225,17 @@ XGA_VIDEO_MODE XgaModes[] = {
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
       VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
-},  //end of 65536 for XGA2
+},  
 {
 	//Added by Ryan Alswede
   NULL,         					// Mode setting table for XGA 1
-  XGA2_MODE_1280x1024x65536x60Hz,     // Mode setting table for XGA 2
+  XGA2_1024x768x65536x60Hz,     // Mode setting table for XGA 2
     {
       sizeof(VIDEO_MODE_INFORMATION), // Size of the mode informtion structure
       0,                           // Mode index used in setting the mode
-      1280,                         // X Resolution, in pixels
-      1024,                         // Y Resolution, in pixels
-      2560,                         // Screen stride, in bytes (distance
+      1024,                         // X Resolution, in pixels
+      768,                         // Y Resolution, in pixels
+      2048,                         // Screen stride, in bytes (distance
                                    // between the start point of two
                                    // consecutive scan lines, in bytes)
       1,                           // Number of video memory planes
@@ -2765,7 +3245,7 @@ XGA_VIDEO_MODE XgaModes[] = {
       240,                         // Vertical size of screen in millimeters
       5,                           // Number Red pixels in DAC
       6,                           // Number Green pixels in DAC
-      5,   
+      5,   						 // Mask for Blue Pixels in non-palette modes
 	  0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
@@ -2774,6 +3254,188 @@ XGA_VIDEO_MODE XgaModes[] = {
 },  //end of 65536 for XGA2
 {
 	//Added by Ryan Alswede
+  NULL,         					// Mode setting table for XGA 1
+  XGA2_1024x768x65536x70Hz,     // Mode setting table for XGA 2
+    {
+      sizeof(VIDEO_MODE_INFORMATION), // Size of the mode informtion structure
+      0,                           // Mode index used in setting the mode
+      1024,                         // X Resolution, in pixels
+      768,                         // Y Resolution, in pixels
+      2048,                         // Screen stride, in bytes (distance
+                                   // between the start point of two
+                                   // consecutive scan lines, in bytes)
+      1,                           // Number of video memory planes
+      16,                           // Number of bits per plane
+      70,                           // Screen Frequency, in Hertz
+      320,                         // Horizontal size of screen in millimeters
+      240,                         // Vertical size of screen in millimeters
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,   						 // Mask for Blue Pixels in non-palette modes
+	  0xF800,                  // Mask for Red Pixels in non-palette modes
+      0x07E0,                  // Mask for Green Pixels in non-palette modes
+      0x001F,                  // Mask for Blue Pixels in non-palette modes                 
+      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
+    }
+},  //end of 65536 for XGA2
+{
+	//Added by Ryan Alswede
+  NULL,         					// Mode setting table for XGA 1
+  XGA2_1104x828x65536x72Hz,     // Mode setting table for XGA 2
+    {
+      sizeof(VIDEO_MODE_INFORMATION), // Size of the mode informtion structure
+      0,                           // Mode index used in setting the mode
+      1104,                         // X Resolution, in pixels
+      828,                         // Y Resolution, in pixels
+      2208,                         // Screen stride, in bytes (distance
+                                   // between the start point of two
+                                   // consecutive scan lines, in bytes)
+      1,                           // Number of video memory planes
+      16,                           // Number of bits per plane
+      72,                           // Screen Frequency, in Hertz
+      320,                         // Horizontal size of screen in millimeters
+      240,                         // Vertical size of screen in millimeters
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,   						 // Mask for Blue Pixels in non-palette modes
+	  0xF800,                  // Mask for Red Pixels in non-palette modes
+      0x07E0,                  // Mask for Green Pixels in non-palette modes
+      0x001F,                  // Mask for Blue Pixels in non-palette modes                 
+      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
+    }
+},  //end of 65536 for XGA
+{
+	//Added by Ryan Alswede
+  NULL,         					// Mode setting table for XGA 1
+  XGA2_1104x828x65536x78Hz,     // Mode setting table for XGA 2
+    {
+      sizeof(VIDEO_MODE_INFORMATION), // Size of the mode informtion structure
+      0,                           // Mode index used in setting the mode
+      1104,                         // X Resolution, in pixels
+      828,                         // Y Resolution, in pixels
+      2208,                         // Screen stride, in bytes (distance
+                                   // between the start point of two
+                                   // consecutive scan lines, in bytes)
+      1,                           // Number of video memory planes
+      16,                           // Number of bits per plane
+      78,                           // Screen Frequency, in Hertz
+      320,                         // Horizontal size of screen in millimeters
+      240,                         // Vertical size of screen in millimeters
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,       					 // Mask for Blue Pixels in non-palette modes
+	  0xF800,                  // Mask for Red Pixels in non-palette modes
+      0x07E0,                  // Mask for Green Pixels in non-palette modes
+      0x001F,                  // Mask for Blue Pixels in non-palette modes                 
+      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
+    }
+},  //end of 65536 for XGA2
+{
+	//Added by Ryan Alswede
+  NULL,         					// Mode setting table for XGA 1
+  XGA2_1120x840x65536x75Hz,     // Mode setting table for XGA 2
+    {
+      sizeof(VIDEO_MODE_INFORMATION), // Size of the mode informtion structure
+      0,                           // Mode index used in setting the mode
+      1120,                         // X Resolution, in pixels
+      840,                         // Y Resolution, in pixels
+      2240,                         // Screen stride, in bytes (distance
+                                   // between the start point of two
+                                   // consecutive scan lines, in bytes)
+      1,                           // Number of video memory planes
+      16,                           // Number of bits per plane
+      75,                           // Screen Frequency, in Hertz
+      320,                         // Horizontal size of screen in millimeters
+      240,                         // Vertical size of screen in millimeters
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,   						 // Mask for Blue Pixels in non-palette modes
+	  0xF800,                  // Mask for Red Pixels in non-palette modes
+      0x07E0,                  // Mask for Green Pixels in non-palette modes
+      0x001F,                  // Mask for Blue Pixels in non-palette modes                 
+      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
+    }
+},  //end of 65536 for XGA2
+{
+	//Added by Ryan Alswede
+  NULL,         					// Mode setting table for XGA 1
+  XGA2_1160x870x65536x65Hz,     // Mode setting table for XGA 2
+    {
+      sizeof(VIDEO_MODE_INFORMATION), // Size of the mode informtion structure
+      0,                           // Mode index used in setting the mode
+      1160,                         // X Resolution, in pixels
+      870,                         // Y Resolution, in pixels
+      2320,                         // Screen stride, in bytes (distance
+                                   // between the start point of two
+                                   // consecutive scan lines, in bytes)
+      1,                           // Number of video memory planes
+      16,                           // Number of bits per plane
+      65,                           // Screen Frequency, in Hertz
+      320,                         // Horizontal size of screen in millimeters
+      240,                         // Vertical size of screen in millimeters
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,                      		 // Mask for Blue Pixels in non-palette modes           
+	  0xF800,                  // Mask for Red Pixels in non-palette modes
+      0x07E0,                  // Mask for Green Pixels in non-palette modes
+      0x001F,                  // Mask for Blue Pixels in non-palette modes                 
+      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
+    }
+},  //end of 65536 for XGA2
+{
+	//Added by Ryan Alswede
+  NULL,         					// Mode setting table for XGA 1
+  XGA2_1160x870x65536x70Hz,     // Mode setting table for XGA 2
+    {
+      sizeof(VIDEO_MODE_INFORMATION), // Size of the mode informtion structure
+      0,                           // Mode index used in setting the mode
+      1160,                         // X Resolution, in pixels
+      870,                         // Y Resolution, in pixels
+      2320,                         // Screen stride, in bytes (distance
+                                   // between the start point of two
+                                   // consecutive scan lines, in bytes)
+      1,                           // Number of video memory planes
+      16,                           // Number of bits per plane
+      70,                           // Screen Frequency, in Hertz
+      320,                         // Horizontal size of screen in millimeters
+      240,                         // Vertical size of screen in millimeters
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,							 // Mask for Blue Pixels in non-palette modes
+	  0xF800,                  // Mask for Red Pixels in non-palette modes
+      0x07E0,                  // Mask for Green Pixels in non-palette modes
+      0x001F,                  // Mask for Blue Pixels in non-palette modes                 
+      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
+    }
+},  //end of 65536 for XGA2
+{
+	//Added by Ryan Alswede
+  NULL,         					// Mode setting table for XGA 1
+  XGA2_1280x800x65536x75Hz,     // Mode setting table for XGA 2
+    {
+      sizeof(VIDEO_MODE_INFORMATION), // Size of the mode informtion structure
+      0,                           // Mode index used in setting the mode
+      1280,                         // X Resolution, in pixels
+      800,                         // Y Resolution, in pixels
+      2560,                         // Screen stride, in bytes (distance
+                                   // between the start point of two
+                                   // consecutive scan lines, in bytes)
+      1,                           // Number of video memory planes
+      16,                           // Number of bits per plane
+      75,                           // Screen Frequency, in Hertz
+      320,                         // Horizontal size of screen in millimeters
+      240,                         // Vertical size of screen in millimeters
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,                          // Mask for Blue Pixels in non-palette modes
+	  0xF800,                  // Mask for Red Pixels in non-palette modes
+      0x07E0,                  // Mask for Green Pixels in non-palette modes
+      0x001F,                  // Mask for Blue Pixels in non-palette modes                 
+      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
+    }
+},  //end of 65536 for XGA2
+{
+	
   NULL,         					// Mode setting table for XGA 1
   XGA2_MODE_800x600x65536x77Hz,     // Mode setting table for XGA 2
     {
