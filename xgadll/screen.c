@@ -122,19 +122,18 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
 
     ppdev->pXgaCpRegs->XGAPixelMapIndex = PEL_MAP_A;
     ppdev->pXgaCpRegs->XGAPixMapBasePtr = ppdev->ulPhysFrameBuffer;
+    ppdev->pXgaCpRegs->XGAPixMapWidth = (USHORT) ((ppdev->cxScreen) - 1);
     ppdev->pXgaCpRegs->XGAPixMapHeight  = (USHORT) ppdev->cyScreen - 1;
 	if (ppdev->ulBitCount == 16)  
 	{
 		DebugPrint(0, "XGAPixMapFormat 16\n");
 		ppdev->pXgaCpRegs->XGAPixMapFormat  = PEL_MAP_FORMAT_16;
-		ppdev->pXgaCpRegs->XGAPixMapWidth = (USHORT) ((ppdev->cxScreen) - 1);
 		ppdev->pXgaCpRegs->XGAPixelBitMask    = 0xFFFF;
 	}
 	else
 	{
 		DebugPrint(0, "XGAPixMapFormat 8\n");
 		ppdev->pXgaCpRegs->XGAPixMapFormat  = PEL_MAP_FORMAT_8;
-		ppdev->pXgaCpRegs->XGAPixMapWidth   = (USHORT) ppdev->cxScreen - 1;
 		ppdev->pXgaCpRegs->XGAPixelBitMask    = 0xFF;
 	}
 	
