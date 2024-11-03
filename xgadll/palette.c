@@ -193,6 +193,8 @@ BOOL bInit256ColorPalette(PPDEV ppdev)
 
     if (ppdev->ulBitCount == 8)
     {
+    	DISPDBG((0, "DISP bInit256ColorPalette entry\n"));
+
         // Fill in pScreenClut header info:
 
         pScreenClut             = (PVIDEO_CLUT) ajClutSpace;
@@ -213,6 +215,70 @@ BOOL bInit256ColorPalette(PPDEV ppdev)
             pScreenClutData[cColors].Blue =   ppdev->pPal[cColors].peBlue >>
                                               ppdev->cPaletteShift;
             pScreenClutData[cColors].Unused = 0;
+        }
+
+        // Set palette registers:
+
+        if (EngDeviceIoControl(ppdev->hDriver,
+                             IOCTL_VIDEO_SET_COLOR_REGISTERS,
+                             pScreenClut,
+                             MAX_CLUT_SIZE,
+                             NULL,
+                             0,
+                             &ulReturnedDataLength))
+        {
+            DISPDBG((0, "Failed bEnablePalette"));
+            return(FALSE);
+        }
+    }
+
+    DISPDBG((5, "Passed bEnablePalette"));
+
+    return(TRUE);
+}
+
+/******************************Public*Routine******************************\
+* bInit65536ColorPalette
+*
+* Initialize the hardware's palette registers.
+*
+\**************************************************************************/
+
+BOOL bInit65536ColorPalette(PPDEV ppdev)
+{
+    BYTE        ajClutSpace[MAX_CLUT_SIZE];
+    PVIDEO_CLUT pScreenClut;
+    ULONG       ulReturnedDataLength;
+    ULONG       cColors;
+    ULONG       i;
+    PVIDEO_CLUTDATA pScreenClutData;
+
+    if (ppdev->ulBitCount == 16)
+    {
+    	DISPDBG((0, "DISP bInit65536ColorPalette entry\n"));
+
+        // Fill in pScreenClut header info:
+
+        pScreenClut             = (PVIDEO_CLUT) ajClutSpace;
+        pScreenClut->NumEntries = 256;
+        pScreenClut->FirstEntry = 0;
+
+        // Copy colours in:
+
+        cColors = 256;
+        i = 0;
+        pScreenClutData = (PVIDEO_CLUTDATA) (&(pScreenClut->LookupTable[0]));
+
+        while(cColors--)
+        {
+            pScreenClutData[cColors].Red =    0;
+            pScreenClutData[cColors].Green =  0;
+            if (i < 128)
+            	pScreenClutData[cColors].Blue =   0;
+            else
+            	pScreenClutData[cColors].Blue =   (BYTE)((i-128) * 8);
+            pScreenClutData[cColors].Unused = 0;
+            i++;
         }
 
         // Set palette registers:
