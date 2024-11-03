@@ -224,6 +224,15 @@ DHPDEV dhpdev)
             DISPDBG((0, "DISP DrvEnableSurface failed to init the 8bpp palette\n"));
             return(FALSE);
         }
+        DISPDBG((0, "DISP DrvEnableSurface inited the 8bpp palette\n"));
+    }
+
+    if (ppdev->ulBitCount == 16)  {
+        if (!bInit65536ColorPalette(ppdev)) {
+            DISPDBG((0, "DISP DrvEnableSurface failed to init the 16bpp palette\n"));
+            return(FALSE);
+        }
+        DISPDBG((0, "DISP DrvEnableSurface inited the 16bpp palette\n"));
     }
 
     sizl.cx = ppdev->cxScreen;
@@ -233,11 +242,13 @@ DHPDEV dhpdev)
     {
         ulBitmapType = BMF_8BPP;
         flHooks = HOOKS_BMF8BPP;
+        DISPDBG((0, "DISP DrvEnableSurface 8bpp\n"));
     }
     else if (ppdev->ulBitCount == 16)
     {
         ulBitmapType = BMF_16BPP;
         flHooks = HOOKS_BMF16BPP;
+        DISPDBG((0, "DISP DrvEnableSurface 16bpp\n"));
     }
     else
     {
