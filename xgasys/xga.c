@@ -472,7 +472,7 @@ Return Value:
         framebufMode = TRUE;
 
         hwDeviceExtension->FrameBufferLength = 0x00200000;
-        hwDeviceExtension->PhysicalVideoMemoryLength = 0x00020000;
+        hwDeviceExtension->PhysicalVideoMemoryLength = 0x00010000;
 
         hwDeviceExtension->PhysicalVideoMemoryAddress.HighPart = 0x00000000;
         hwDeviceExtension->PhysicalVideoMemoryAddress.LowPart = 0x000A0000;
@@ -549,7 +549,7 @@ Return Value:
     //
 
     accessRange[5].RangeStart = A0000PhysicalAddress;
-    accessRange[5].RangeLength = 0x00020000;
+    accessRange[5].RangeLength = 0x00010000;
     accessRange[5].RangeInIoSpace = FALSE;
     accessRange[5].RangeVisible = FALSE;
     accessRange[5].RangeShareable = TRUE;
