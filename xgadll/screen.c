@@ -59,13 +59,11 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
                              sizeof (VIDEO_XGA_COPROCESSOR_INFORMATION),
                              &ReturnedDataLength)) {
 
-			DebugPrint(0, "IOCTL_VIDEO_XGA_MAP_COPROCESSOR - FAILED\n");
             DISPDBG((0, "XGA.DLL: Mapping Coprocessor failed - use banked framebuf\n"));
             return FALSE;
 
         }
 
-		DebugPrint(0, "IOCTL_VIDEO_XGA_MAP_COPROCESSOR - WORKED\n");
         // Set the globals, we will need these almost everywhere.
 
         ppdev->pXgaCpRegs        = CoProcessorInfo.CoProcessorVirtualAddress;
@@ -85,11 +83,11 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
                          NULL,
                          0,
                          &ReturnedDataLength)) {
-		DebugPrint(0, "IOCTL_VIDEO_SET_CURRENT_MODE - FAILED\n");
+
         RIP("XGA.DLL: Initialization error-Set mode\n");
         return FALSE;
     }
-	DebugPrint(0, "IOCTL_VIDEO_SET_CURRENT_MODE - WORKED\n");
+
     if (bFirst) {
 
         VideoMemory.RequestedVirtualAddress = NULL;
@@ -101,13 +99,12 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
                              (PVOID) &VideoMemoryInfo, // output buffer
                              sizeof (VideoMemoryInfo),
                              &ReturnedDataLength)) {
-			DebugPrint(0, "IOCTL_VIDEO_MAP_VIDEO_MEMORY - FAILED\n");
+
             RIP("XGA.DLL: Initialization error-Map buffer address\n");
             return FALSE;
 
         }
 
-		DebugPrint(0, "IOCTL_VIDEO_MAP_VIDEO_MEMORY - WORKED\n");
         ppdev->pjScreen = VideoMemoryInfo.FrameBufferBase;
         ppdev->ulScreenSize = VideoMemoryInfo.FrameBufferLength;
         ppdev->ulVideoMemorySize = VideoMemoryInfo.VideoRamLength;
@@ -122,7 +119,7 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
 
     ppdev->pXgaCpRegs->XGAPixelMapIndex = PEL_MAP_A;
     ppdev->pXgaCpRegs->XGAPixMapBasePtr = ppdev->ulPhysFrameBuffer;
-    ppdev->pXgaCpRegs->XGAPixMapWidth = (USHORT) ((ppdev->cxScreen) - 1);
+    ppdev->pXgaCpRegs->XGAPixMapWidth   = (USHORT) ppdev->cxScreen - 1;
     ppdev->pXgaCpRegs->XGAPixMapHeight  = (USHORT) ppdev->cyScreen - 1;
 	if (ppdev->ulBitCount == 16)  
 	{
@@ -189,7 +186,7 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
         //
         // private flag used for determining driver capabilities.
         //
-		DebugPrint(0, "Accelerations - WORKED\n");
+
 
         ppdev->ulfAccelerations_debug = CACHED_FONTS;
         ppdev->ulfBlitAccelerations_debug = SCRN_TO_SCRN_CPY | SOLID_PATTERN;
@@ -200,7 +197,6 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
         // !!! Turn off all accelerations for broken hardware !
         //
 
-		DebugPrint(0, "Accelerations - FAILED\n");
         ppdev->ulfAccelerations_debug = 0;
         ppdev->ulfBlitAccelerations_debug = 0;
 

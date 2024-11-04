@@ -193,8 +193,6 @@ BOOL bInit256ColorPalette(PPDEV ppdev)
 
     if (ppdev->ulBitCount == 8)
     {
-    	DISPDBG((0, "DISP bInit256ColorPalette entry\n"));
-
         // Fill in pScreenClut header info:
 
         pScreenClut             = (PVIDEO_CLUT) ajClutSpace;
@@ -329,8 +327,6 @@ ULONG   cColors)
     PDEV*           ppdev;
 
     UNREFERENCED_PARAMETER(fl);
-
-    DISPDBG((0, "DISP DrvSetPalette entry\n"));
 
     ppdev = (PDEV*) dhpdev;
 
