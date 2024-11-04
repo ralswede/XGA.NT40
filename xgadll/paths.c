@@ -36,7 +36,10 @@ BOOL    b ;
 
         // Wait for the coprocessor.
 
-        vWaitForCoProcessor((PPDEV)pso->dhpdev, 100) ;
+        if (((PPDEV)pso->dhpdev)->ulBitCount == 16)
+			vWaitForCoProcessorXGA2((PPDEV)pso->dhpdev, 100);
+		else
+			vWaitForCoProcessor((PPDEV)pso->dhpdev, 100);
 
          b = EngStrokePath(((PPDEV)(pso->dhpdev))->pSurfObj,
                            ppo,
@@ -76,7 +79,10 @@ BOOL    b ;
 
         // Wait for the coprocessor.
 
-        vWaitForCoProcessor((PPDEV)pso->dhpdev, 100) ;
+        if (((PPDEV)pso->dhpdev)->ulBitCount == 16)
+			vWaitForCoProcessorXGA2((PPDEV)pso->dhpdev, 100);
+		else
+			vWaitForCoProcessor((PPDEV)pso->dhpdev, 100);
 
         b = EngPaint(((PPDEV)(pso->dhpdev))->pSurfObj,
                      pco,

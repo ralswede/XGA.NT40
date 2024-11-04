@@ -184,7 +184,10 @@ HSURF   hsurfSrc, hsurfTrg;
 
         // Wait for the coprocessor.
 
-        vWaitForCoProcessor((PPDEV)psoTrg->dhpdev, 100);
+        if (((PPDEV)psoTrg->dhpdev)->ulBitCount == 16)
+        	vWaitForCoProcessorXGA2((PPDEV)psoTrg->dhpdev, 100);
+        else
+        	vWaitForCoProcessor((PPDEV)psoTrg->dhpdev, 100);
 
         // NOTE: If the ForeRop and BackRop are the same implicitly
         //       there is no mask.
@@ -457,7 +460,10 @@ SURFOBJ *pso;
 
         // Wait for the coprocessor.
 
-        vWaitForCoProcessor((PPDEV)pso->dhpdev, 100);
+        if (((PPDEV)pso->dhpdev)->ulBitCount == 16)
+			vWaitForCoProcessorXGA2((PPDEV)pso->dhpdev, 100);
+		else
+			vWaitForCoProcessor((PPDEV)pso->dhpdev, 100);
 
         // Protect this routine from a potentially NULL clip object
 

@@ -6,12 +6,13 @@
 typedef struct XGARegisters {             /* XGA CoProcessor Registers Overlay */
             ULONG  XGAPageDirBaseAddr;     // 0x00
             ULONG  XGACurrVirtAddr;        // 0x04
-            ULONG  XGAReserve1;            // 0x08
+            UCHAR  XGAReserve1;            // 0x08
+   volatile UCHAR  XGAAuxCoprocStat;       // 0x09 only on XGA-2
+   	   	    USHORT XGAReserve1_1;          // 0x0A-0x0B still reserved
             UCHAR  XGAStateALen;           // 0x0C
             UCHAR  XGAStateBLen;           // 0x0D
             USHORT XGAReserve2;
             UCHAR  XGAReserve3;
-   //volatile UCHAR  XGAAuxCoprocStat;          // 0x09 future enancement
    volatile UCHAR  XGACoprocCntl;          // 0x11
             UCHAR  XGAPixelMapIndex;       // 0x12
             UCHAR  XGAReserve4;

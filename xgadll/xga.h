@@ -150,6 +150,7 @@
 
 
 extern VOID vWaitForCoProcessor(PPDEV ppdev, ULONG ulDelay) ;
+extern VOID vWaitForCoProcessorXGA2(PPDEV ppdev, ULONG ulDelay) ;
 
 extern BOOL bSetXgaClipping(PPDEV ppdev, CLIPOBJ *pco, PULONG pulXgaMask) ;
 
