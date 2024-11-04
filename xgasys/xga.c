@@ -1416,13 +1416,13 @@ virtual = %x\n length = %x\n framebase = %x\n frameLength = %x\n",
            pClutData = &clutBuffer->LookupTable[i].RgbArray;
 
            XGAOUT(INDEX_REG, 0x65);
-           XGAOUT(0x0B, pClutData->Red);
+           XGAOUT(DATA_IN_REG, pClutData->Red);
 
            XGAOUT(INDEX_REG, 0x65);
-           XGAOUT(0x0B, pClutData->Green);
+           XGAOUT(DATA_IN_REG, pClutData->Green);
 
            XGAOUT(INDEX_REG, 0x65);
-           XGAOUT(0x0B, pClutData->Blue);
+           XGAOUT(DATA_IN_REG, pClutData->Blue);
         }
 
         status = NO_ERROR;

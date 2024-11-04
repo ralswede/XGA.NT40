@@ -129,6 +129,7 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
 		DebugPrint(0, "XGAPixMapFormat 16\n");
 		ppdev->pXgaCpRegs->XGAPixMapFormat  = PEL_MAP_FORMAT_16;
 		ppdev->pXgaCpRegs->XGAPixelBitMask    = 0xFFFF;
+		ppdev->pXgaCpRegs->XGACarryChainMask = 0x7FFF;
 	}
 	else
 	{

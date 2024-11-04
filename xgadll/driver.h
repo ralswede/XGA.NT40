@@ -6,7 +6,7 @@
 * Copyright (c) 1992 Microsoft Corporation
 \**************************************************************************/
 
-#define DBG 1
+//#define DBG 1
 
 #ifndef DRIVER_H
 #define DRIVER_H 1

@@ -250,7 +250,6 @@ BOOL bInit65536ColorPalette(PPDEV ppdev)
     PVIDEO_CLUT pScreenClut;
     ULONG       ulReturnedDataLength;
     ULONG       cColors;
-    ULONG       i;
     PVIDEO_CLUTDATA pScreenClutData;
 
     if (ppdev->ulBitCount == 16)
@@ -266,19 +265,28 @@ BOOL bInit65536ColorPalette(PPDEV ppdev)
         // Copy colours in:
 
         cColors = 256;
-        i = 0;
         pScreenClutData = (PVIDEO_CLUTDATA) (&(pScreenClut->LookupTable[0]));
 
         while(cColors--)
         {
             pScreenClutData[cColors].Red =    0;
             pScreenClutData[cColors].Green =  0;
-            if (i < 128)
+
+            // From IBM_VGA_XGA_Technical_Reference_Manual_May92.pdf:
+            // On the XGA Subsystem, when selecting Direct Color 16bpp  mode, the palette
+            // must be loaded with data shown in Figure 3-13 on page 3-32.
+            // Only half of the palette should be loaded. Bit 7 of the Border Color
+            // register (index hex 55) specifies which half to load. If the Border
+            // Color register bit 7 = 0, load the upper half of the palette
+            // (locations hex 80 to FF). If the Border Color register bit 7 = 1,
+            // load the lower half (locations hex 00 to 7F).
+            // Register 0x55 is actually 0x00, so we have to load the UPPER half.
+            if (cColors < 128)
             	pScreenClutData[cColors].Blue =   0;
             else
-            	pScreenClutData[cColors].Blue =   (BYTE)((i-128) * 8);
+            	pScreenClutData[cColors].Blue =   (BYTE)((cColors-128) * 8);
+            //DISPDBG((0, "bInit65536ColorPalette i=%d b=%d\n", i, pScreenClutData[cColors].Blue));
             pScreenClutData[cColors].Unused = 0;
-            i++;
         }
 
         // Set palette registers:
@@ -321,6 +329,8 @@ ULONG   cColors)
     PDEV*           ppdev;
 
     UNREFERENCED_PARAMETER(fl);
+
+    DISPDBG((0, "DISP DrvSetPalette entry\n"));
 
     ppdev = (PDEV*) dhpdev;
 

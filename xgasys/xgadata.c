@@ -58,7 +58,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0x67,
@@ -118,7 +118,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0x63,
@@ -178,7 +178,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0x82,
@@ -238,7 +238,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0x83,
@@ -301,7 +301,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0x82,
@@ -361,7 +361,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x03, //TODO was 4. win9x: 3
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0xA5,
@@ -421,7 +421,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x03, //TODO was 4. win9x: 3
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0xA5,
@@ -481,7 +481,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0xB2,
@@ -541,7 +541,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0xB2,
@@ -601,7 +601,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0xB2,
@@ -661,7 +661,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0xB4,
@@ -721,7 +721,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0xBA,
@@ -781,7 +781,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0xBA,
@@ -841,7 +841,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0xCC,
@@ -902,7 +902,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0x82,
@@ -1089,7 +1089,7 @@ INDEX_REG,        0x64, 0x00,
 APP_CTL_REG,      0x00, 0x00,
 APP_INDEX_REG,    0x00, 0x00,
 VMEM_CONTROL_REG, 0x00, 0x00,
-MEMACC_MODE_REG,  0x00, 0x04,
+MEMACC_MODE_REG,  0x00, 0x03,
 INDEX_REG,        0x50, 0x01,
 INDEX_REG,        0x50, 0x00,
 INDEX_REG,        0x10, 0x63,
@@ -3289,13 +3289,13 @@ XGA_VIDEO_MODE XgaModes[] = {
       60,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      8,                           // Number Red pixels in DAC
-      8,                           // Number Green pixels in DAC
-      8,                           // Number Blue pixels in DAC
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,                           // Number Blue pixels in DAC
       0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes
-	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS | VIDEO_MODE_PALETTE_DRIVEN | VIDEO_MODE_MANAGED_PALETTE // Mode description flags.
+	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 },  //end of 65536 for XGA2
 {
@@ -3315,13 +3315,13 @@ XGA_VIDEO_MODE XgaModes[] = {
       73,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      8,                           // Number Red pixels in DAC
-      8,                           // Number Green pixels in DAC
-      8,                           // Number Blue pixels in DAC
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,                           // Number Blue pixels in DAC
       0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes
-	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS | VIDEO_MODE_PALETTE_DRIVEN | VIDEO_MODE_MANAGED_PALETTE // Mode description flags.
+	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 },  //end of 65536 for XGA2
 {
@@ -3341,14 +3341,13 @@ XGA_VIDEO_MODE XgaModes[] = {
       72,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      8,                           // Number Red pixels in DAC
-      8,                           // Number Green pixels in DAC
-      8,
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,
 	  0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
-      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS | VIDEO_MODE_PALETTE_DRIVEN |
-      VIDEO_MODE_MANAGED_PALETTE // Mode description flags.
+      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 },  
 {
@@ -3368,14 +3367,13 @@ XGA_VIDEO_MODE XgaModes[] = {
       70,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      8,                           // Number Red pixels in DAC
-      8,                           // Number Green pixels in DAC
-      8,
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,
 	  0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
-      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS | VIDEO_MODE_PALETTE_DRIVEN |
-      VIDEO_MODE_MANAGED_PALETTE // Mode description flags.
+      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 },  
 {
@@ -3395,14 +3393,13 @@ XGA_VIDEO_MODE XgaModes[] = {
       60,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      8,                           // Number Red pixels in DAC
-      8,                           // Number Green pixels in DAC
-      8,
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,
 	  0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
-      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS | VIDEO_MODE_PALETTE_DRIVEN |
-      VIDEO_MODE_MANAGED_PALETTE // Mode description flags.
+      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 }, 
 {
@@ -3422,9 +3419,9 @@ XGA_VIDEO_MODE XgaModes[] = {
       60,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      8,                           // Number Red pixels in DAC
-      8,                           // Number Green pixels in DAC
-      8,   						 // Mask for Blue Pixels in non-palette modes
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,   						 // Mask for Blue Pixels in non-palette modes
 	  0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
@@ -3448,20 +3445,17 @@ XGA_VIDEO_MODE XgaModes[] = {
       70,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      8,                           // Number Red pixels in DAC
-      8,                           // Number Green pixels in DAC
-      8,   						 // Mask for Blue Pixels in non-palette modes
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,   						 // Mask for Blue Pixels in non-palette modes
 	  0xF800,                  // Mask for Red Pixels in non-palette modes
-      0x07E0,                  // Mask for Green Pixels in non-palette modes
-      0x001F,                  // Mask for Blue Pixels in non-palette modes
-	  //TODO 0x7C00,                  // Mask for Red Pixels in non-palette modes
-	  //TODO 0x03E0,                  // Mask for Green Pixels in non-palette modes
-	  //TODO 0x001F,                  // Mask for Blue Pixels in non-palette modes
+	  0x07E0,                  // Mask for Green Pixels in non-palette modes
+	  0x001F,                  // Mask for Blue Pixels in non-palette modes
 	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 },  //end of 65536 for XGA2
 {
-	//Added by Ryan Alswede	//TODO all 65536: Palette driven and managed? Rather nto!
+	//Added by Ryan Alswede
   NULL,         					// Mode setting table for XGA 1
   XGA2_1104x828x65536x72Hz,     // Mode setting table for XGA 2
     {
@@ -3477,13 +3471,13 @@ XGA_VIDEO_MODE XgaModes[] = {
       72,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      8,                           // Number Red pixels in DAC
-      8,                           // Number Green pixels in DAC
-      8,   						 // Mask for Blue Pixels in non-palette modes
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,   						 // Mask for Blue Pixels in non-palette modes
 	  0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
-	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS | VIDEO_MODE_PALETTE_DRIVEN | VIDEO_MODE_MANAGED_PALETTE // Mode description flags.
+	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 },  //end of 65536 for XGA
 {
@@ -3503,13 +3497,13 @@ XGA_VIDEO_MODE XgaModes[] = {
       78,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      8,                           // Number Red pixels in DAC
-      8,                           // Number Green pixels in DAC
-      8,       					 // Mask for Blue Pixels in non-palette modes
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,       					 // Mask for Blue Pixels in non-palette modes
 	  0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
-	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS | VIDEO_MODE_PALETTE_DRIVEN | VIDEO_MODE_MANAGED_PALETTE // Mode description flags.
+	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 },  //end of 65536 for XGA2
 {
@@ -3535,7 +3529,7 @@ XGA_VIDEO_MODE XgaModes[] = {
 	  0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
-	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS | VIDEO_MODE_PALETTE_DRIVEN | VIDEO_MODE_MANAGED_PALETTE // Mode description flags.
+	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 },  //end of 65536 for XGA2
 {
@@ -3555,13 +3549,13 @@ XGA_VIDEO_MODE XgaModes[] = {
       65,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      8,                           // Number Red pixels in DAC
-      8,                           // Number Green pixels in DAC
-      8,                      		 // Mask for Blue Pixels in non-palette modes
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,                      		 // Mask for Blue Pixels in non-palette modes
 	  0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
-	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS | VIDEO_MODE_PALETTE_DRIVEN | VIDEO_MODE_MANAGED_PALETTE // Mode description flags.
+	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 },  //end of 65536 for XGA2
 {
@@ -3581,13 +3575,13 @@ XGA_VIDEO_MODE XgaModes[] = {
       70,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      8,                           // Number Red pixels in DAC
-      8,                           // Number Green pixels in DAC
-      8,							 // Mask for Blue Pixels in non-palette modes
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,							 // Mask for Blue Pixels in non-palette modes
 	  0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
-	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS | VIDEO_MODE_PALETTE_DRIVEN | VIDEO_MODE_MANAGED_PALETTE // Mode description flags.
+	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 },  //end of 65536 for XGA2
 {
@@ -3607,13 +3601,13 @@ XGA_VIDEO_MODE XgaModes[] = {
       75,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      8,                           // Number Red pixels in DAC
-      8,                           // Number Green pixels in DAC
-      8,                          // Mask for Blue Pixels in non-palette modes
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,                          // Mask for Blue Pixels in non-palette modes
 	  0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
-	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS | VIDEO_MODE_PALETTE_DRIVEN | VIDEO_MODE_MANAGED_PALETTE // Mode description flags.
+	  VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 },  //end of 65536 for XGA2
 {
@@ -3633,13 +3627,13 @@ XGA_VIDEO_MODE XgaModes[] = {
       77,                           // Screen Frequency, in Hertz
       320,                         // Horizontal size of screen in millimeters
       240,                         // Vertical size of screen in millimeters
-      8,                           // Number Red pixels in DAC
-      8,                           // Number Green pixels in DAC
-      8,
+      5,                           // Number Red pixels in DAC
+      6,                           // Number Green pixels in DAC
+      5,
 	  0xF800,                  // Mask for Red Pixels in non-palette modes
       0x07E0,                  // Mask for Green Pixels in non-palette modes
       0x001F,                  // Mask for Blue Pixels in non-palette modes                 
-      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS | VIDEO_MODE_PALETTE_DRIVEN | VIDEO_MODE_MANAGED_PALETTE // Mode description flags.
+      VIDEO_MODE_COLOR | VIDEO_MODE_GRAPHICS // Mode description flags.
     }
 },  //end of 65536 for XGA2
 {
