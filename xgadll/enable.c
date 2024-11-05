@@ -20,8 +20,8 @@ DRVFN gadrvfn[] = {
     {   INDEX_DrvAssertMode,            (PFN) DrvAssertMode         },
     {   INDEX_DrvEnableSurface,         (PFN) DrvEnableSurface      },
     {   INDEX_DrvDisableSurface,        (PFN) DrvDisableSurface     },
-    {   INDEX_DrvMovePointer,           (PFN) DrvMovePointer        },
-    {   INDEX_DrvSetPointerShape,       (PFN) DrvSetPointerShape    },
+   // {   INDEX_DrvMovePointer,           (PFN) DrvMovePointer        },
+   // {   INDEX_DrvSetPointerShape,       (PFN) DrvSetPointerShape    },
     {   INDEX_DrvDitherColor,           (PFN) DrvDitherColor        },
     {   INDEX_DrvSetPalette,            (PFN) DrvSetPalette         },
     {   INDEX_DrvCopyBits,              (PFN) DrvCopyBits           },
@@ -225,7 +225,18 @@ DHPDEV dhpdev)
             return(FALSE);
         }
     }
-
+	
+	// Added by Christian Holzapfel | 11-04-2024
+	// *****************************************
+    if (ppdev->ulBitCount == 16)  {
+        if (!bInit65536ColorPalette(ppdev)) {
+            DISPDBG((0, "DISP DrvEnableSurface failed to init the 16bpp palette\n"));
+            return(FALSE);
+        }
+        DISPDBG((0, "DISP DrvEnableSurface inited the 16bpp palette\n"));
+    }
+	// *****************************************
+	
     sizl.cx = ppdev->cxScreen;
     sizl.cy = ppdev->cyScreen;
 

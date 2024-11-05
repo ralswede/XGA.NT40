@@ -472,7 +472,7 @@ Return Value:
         framebufMode = TRUE;
 
         hwDeviceExtension->FrameBufferLength = 0x00200000;
-        hwDeviceExtension->PhysicalVideoMemoryLength = 0x00020000;
+        hwDeviceExtension->PhysicalVideoMemoryLength = 0x00010000;
 
         hwDeviceExtension->PhysicalVideoMemoryAddress.HighPart = 0x00000000;
         hwDeviceExtension->PhysicalVideoMemoryAddress.LowPart = 0x000A0000;
@@ -549,7 +549,7 @@ Return Value:
     //
 
     accessRange[5].RangeStart = A0000PhysicalAddress;
-    accessRange[5].RangeLength = 0x00020000;
+    accessRange[5].RangeLength = 0x00010000;
     accessRange[5].RangeInIoSpace = FALSE;
     accessRange[5].RangeVisible = FALSE;
     accessRange[5].RangeShareable = TRUE;
@@ -1416,13 +1416,13 @@ virtual = %x\n length = %x\n framebase = %x\n frameLength = %x\n",
            pClutData = &clutBuffer->LookupTable[i].RgbArray;
 
            XGAOUT(INDEX_REG, 0x65);
-           XGAOUT(0x0B, pClutData->Red);
+           XGAOUT(DATA_IN_REG, pClutData->Red);
 
            XGAOUT(INDEX_REG, 0x65);
-           XGAOUT(0x0B, pClutData->Green);
+           XGAOUT(DATA_IN_REG, pClutData->Green);
 
            XGAOUT(INDEX_REG, 0x65);
-           XGAOUT(0x0B, pClutData->Blue);
+           XGAOUT(DATA_IN_REG, pClutData->Blue);
         }
 
         status = NO_ERROR;

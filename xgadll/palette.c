@@ -236,6 +236,80 @@ BOOL bInit256ColorPalette(PPDEV ppdev)
 }
 
 /******************************Public*Routine******************************\
+*Added by Christian Holzapfel | 11-04-2024
+*
+* bInit65536ColorPalette
+*
+* Initialize the hardware's palette registers.
+*
+\**************************************************************************/
+
+BOOL bInit65536ColorPalette(PPDEV ppdev)
+{
+    BYTE        ajClutSpace[MAX_CLUT_SIZE];
+    PVIDEO_CLUT pScreenClut;
+    ULONG       ulReturnedDataLength;
+    ULONG       cColors;
+    PVIDEO_CLUTDATA pScreenClutData;
+
+    if (ppdev->ulBitCount == 16)
+    {
+    	DISPDBG((0, "DISP bInit65536ColorPalette entry\n"));
+
+        // Fill in pScreenClut header info:
+
+        pScreenClut             = (PVIDEO_CLUT) ajClutSpace;
+        pScreenClut->NumEntries = 256;
+        pScreenClut->FirstEntry = 0;
+
+        // Copy colours in:
+
+        cColors = 256;
+        pScreenClutData = (PVIDEO_CLUTDATA) (&(pScreenClut->LookupTable[0]));
+
+        while(cColors--)
+        {
+            pScreenClutData[cColors].Red =    0;
+            pScreenClutData[cColors].Green =  0;
+
+            // From IBM_VGA_XGA_Technical_Reference_Manual_May92.pdf:
+            // On the XGA Subsystem, when selecting Direct Color 16bpp  mode, the palette
+            // must be loaded with data shown in Figure 3-13 on page 3-32.
+            // Only half of the palette should be loaded. Bit 7 of the Border Color
+            // register (index hex 55) specifies which half to load. If the Border
+            // Color register bit 7 = 0, load the upper half of the palette
+            // (locations hex 80 to FF). If the Border Color register bit 7 = 1,
+            // load the lower half (locations hex 00 to 7F).
+            // Register 0x55 is actually 0x00, so we have to load the UPPER half.
+            if (cColors < 128)
+            	pScreenClutData[cColors].Blue =   0;
+            else
+            	pScreenClutData[cColors].Blue =   (BYTE)((cColors-128) * 8);
+            //DISPDBG((0, "bInit65536ColorPalette i=%d b=%d\n", i, pScreenClutData[cColors].Blue));
+            pScreenClutData[cColors].Unused = 0;
+        }
+
+        // Set palette registers:
+
+        if (EngDeviceIoControl(ppdev->hDriver,
+                             IOCTL_VIDEO_SET_COLOR_REGISTERS,
+                             pScreenClut,
+                             MAX_CLUT_SIZE,
+                             NULL,
+                             0,
+                             &ulReturnedDataLength))
+        {
+            DISPDBG((0, "Failed bEnablePalette"));
+            return(FALSE);
+        }
+    }
+
+    DISPDBG((5, "Passed bEnablePalette"));
+
+    return(TRUE);
+}
+
+/******************************Public*Routine******************************\
 * DrvSetPalette
 *
 * DDI entry point for manipulating the palette.

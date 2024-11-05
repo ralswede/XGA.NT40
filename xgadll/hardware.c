@@ -54,6 +54,8 @@ BOOL DevSetPalette(HANDLE hDriver, PPALETTEENTRY lpPalette,
 /****************************************************************************
  * vWaitForCoProcessor
  ***************************************************************************/
+// Added by Christian Holzapfel | 11-04-2024
+// *****************************************
 VOID vWaitForCoProcessor(PPDEV ppdev, ULONG ulDelay)
 {
 
@@ -64,7 +66,29 @@ VOID vWaitForCoProcessor(PPDEV ppdev, ULONG ulDelay)
     DISPDBG((3, "XGA.DLL!vWaitForCoProcessor - Entry\n"));
 
 	while (ppdev->pXgaCpRegs->XGACoprocCntl & 0x80)
-	//while (ppdev->pXgaCpRegs->XGAAuxCoprocStat & 0x80)   //future enhancement 
+    {
+        for (i = 0; i < ulDelay; i++)
+        {
+            if (iWait & 0x80)
+                j++;
+        }
+    }
+}
+// *****************************************
+
+/****************************************************************************
+ * vWaitForCoProcessorXGA2
+ ***************************************************************************/
+VOID vWaitForCoProcessorXGA2(PPDEV ppdev, ULONG ulDelay)
+{
+
+    ULONG i;
+    ULONG j;
+    volatile ULONG iWait = 0x5555;
+	j=0;
+    DISPDBG((3, "XGA.DLL!vWaitForCoProcessorXGA2 - Entry\n"));
+
+	while (ppdev->pXgaCpRegs->XGAAuxCoprocStat & 0x80)   // Only on XGA-2
     {
         for (i = 0; i < ulDelay; i++)
         {

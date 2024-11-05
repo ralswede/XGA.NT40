@@ -72,6 +72,11 @@ Revision History:
 #define XGAOUT(reg, val)    \
   VideoPortWritePortUchar((PUCHAR)(hwDeviceExtension->IoRegBaseAddress+reg), val)
 
+// Added by Christian Holzapfel | 11-04-2024
+// *****************************************
+#define XGAIN(reg)    \
+  VideoPortReadPortUchar((PUCHAR)(hwDeviceExtension->IoRegBaseAddress+reg))
+// *****************************************
 
 #define XGAIDXOUT(reg, index, val)  \
   VideoPortWritePortUshort((PUSHORT)(hwDeviceExtension->IoRegBaseAddress+reg), (USHORT)((val << 8) + index))

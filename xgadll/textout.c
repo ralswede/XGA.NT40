@@ -107,9 +107,18 @@ BOOL DrvTextOut(
 BOOL    b;
 
         DISPDBG((2, "XGA.DLL!DrvTextOut - Entry\n"));
-
-        vWaitForCoProcessor((PPDEV)pso->dhpdev, 100);
-
+		// Added by Christian Holzapfel | 11-04-2024
+        // *****************************************
+        if (((PPDEV)pso->dhpdev)->ulBitCount == 16)
+        {
+			vWaitForCoProcessorXGA2((PPDEV)pso->dhpdev, 100);
+		}
+		else
+		{
+			vWaitForCoProcessor((PPDEV)pso->dhpdev, 100);
+		}
+		// *****************************************
+		
         b = FALSE;
 
         // For now only handle fonts with the A & B spaceing components
@@ -365,7 +374,10 @@ PXGACPREGS pXgaCpRegs = ((PPDEV)pso->dhpdev)->pXgaCpRegs;
                 //       to get ready for the next character is done
                 //       before we have to wait for the CoProcessor.
 
-                vWaitForCoProcessor((PPDEV)pso->dhpdev, 10);
+                if (((PPDEV)pso->dhpdev)->ulBitCount == 16)
+        			vWaitForCoProcessorXGA2((PPDEV)pso->dhpdev, 10);
+        		else
+        			vWaitForCoProcessor((PPDEV)pso->dhpdev, 10);
 
                 // Setup the pattern bitmap Pel interface registers.
 
@@ -571,7 +583,10 @@ PXGACPREGS pXgaCpRegs = ((PPDEV)pso->dhpdev)->pXgaCpRegs;
                 //       to get ready for the next character is done
                 //       before we have to wait for the CoProcessor.
 
-                vWaitForCoProcessor((PPDEV)pso->dhpdev, 10);
+                if (((PPDEV)pso->dhpdev)->ulBitCount == 16)
+        			vWaitForCoProcessorXGA2((PPDEV)pso->dhpdev, 10);
+        		else
+        			vWaitForCoProcessor((PPDEV)pso->dhpdev, 10);
 
                 // Setup the pattern bitmap Pel interface registers.
 
@@ -669,9 +684,17 @@ PXGACPREGS pXgaCpRegs = ppdev->pXgaCpRegs;
         XGAPixelOp |= ulXgaMask;
 
         pXgaCpRegs->XGAPixelOp = XGAPixelOp;
-
-        vWaitForCoProcessor(ppdev, 10);
-
+		// Added by Christian Holzapfel | 11-04-2024
+        // *****************************************
+        if (ppdev->ulBitCount == 16)
+		{
+			vWaitForCoProcessorXGA2(ppdev, 10);
+		}
+		else
+		{
+			vWaitForCoProcessor(ppdev, 10);
+		}
+		// *****************************************
         return (TRUE);
 
 

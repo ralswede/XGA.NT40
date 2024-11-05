@@ -6,7 +6,7 @@
 * Copyright (c) 1992 Microsoft Corporation
 \**************************************************************************/
 
-#define DBG 1
+//#define DBG 1
 
 #ifndef DRIVER_H
 #define DRIVER_H 1
@@ -111,6 +111,10 @@ BOOL bInitPDEV(PPDEV,PDEVMODEW, GDIINFO *, DEVINFO *);
 BOOL bInitSURF(PPDEV,BOOL);
 BOOL bInitPaletteInfo(PPDEV, DEVINFO *);
 BOOL bInit256ColorPalette(PPDEV);
+// Added by Christian Holzapfel | 11-04-2024
+// *****************************************
+BOOL bInit65536ColorPalette(PPDEV);
+// *****************************************
 VOID vDisablePalette(PPDEV);
 VOID vDisableSURF(PPDEV);
 DWORD getAvailableModes(HANDLE, PVIDEO_MODE_INFORMATION *, DWORD *);

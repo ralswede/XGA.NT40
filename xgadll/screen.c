@@ -59,13 +59,11 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
                              sizeof (VIDEO_XGA_COPROCESSOR_INFORMATION),
                              &ReturnedDataLength)) {
 
-			DebugPrint(0, "IOCTL_VIDEO_XGA_MAP_COPROCESSOR - FAILED\n");
             DISPDBG((0, "XGA.DLL: Mapping Coprocessor failed - use banked framebuf\n"));
             return FALSE;
 
         }
 
-		DebugPrint(0, "IOCTL_VIDEO_XGA_MAP_COPROCESSOR - WORKED\n");
         // Set the globals, we will need these almost everywhere.
 
         ppdev->pXgaCpRegs        = CoProcessorInfo.CoProcessorVirtualAddress;
@@ -85,11 +83,11 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
                          NULL,
                          0,
                          &ReturnedDataLength)) {
-		DebugPrint(0, "IOCTL_VIDEO_SET_CURRENT_MODE - FAILED\n");
+
         RIP("XGA.DLL: Initialization error-Set mode\n");
         return FALSE;
     }
-	DebugPrint(0, "IOCTL_VIDEO_SET_CURRENT_MODE - WORKED\n");
+
     if (bFirst) {
 
         VideoMemory.RequestedVirtualAddress = NULL;
@@ -101,13 +99,12 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
                              (PVOID) &VideoMemoryInfo, // output buffer
                              sizeof (VideoMemoryInfo),
                              &ReturnedDataLength)) {
-			DebugPrint(0, "IOCTL_VIDEO_MAP_VIDEO_MEMORY - FAILED\n");
+
             RIP("XGA.DLL: Initialization error-Map buffer address\n");
             return FALSE;
 
         }
 
-		DebugPrint(0, "IOCTL_VIDEO_MAP_VIDEO_MEMORY - WORKED\n");
         ppdev->pjScreen = VideoMemoryInfo.FrameBufferBase;
         ppdev->ulScreenSize = VideoMemoryInfo.FrameBufferLength;
         ppdev->ulVideoMemorySize = VideoMemoryInfo.VideoRamLength;
@@ -126,18 +123,22 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
     ppdev->pXgaCpRegs->XGAPixMapHeight  = (USHORT) ppdev->cyScreen - 1;
 	if (ppdev->ulBitCount == 16)  
 	{
-		ppdev->pXgaCpRegs->XGAPixMapFormat  = PEL_MAP_FORMAT_16;
 		DebugPrint(0, "XGAPixMapFormat 16\n");
-		
+		ppdev->pXgaCpRegs->XGAPixMapFormat  = PEL_MAP_FORMAT_16;
+		// Added by Christian Holzapfel | 11-04-2024
+		// *****************************************
+		ppdev->pXgaCpRegs->XGAPixelBitMask  = 0xFFFF;
+		ppdev->pXgaCpRegs->XGACarryChainMask = 0x7FFF;
+		// *****************************************
 	}
 	else
 	{
-		ppdev->pXgaCpRegs->XGAPixMapFormat  = PEL_MAP_FORMAT_8;
 		DebugPrint(0, "XGAPixMapFormat 8\n");
+		ppdev->pXgaCpRegs->XGAPixMapFormat  = PEL_MAP_FORMAT_8;
+		ppdev->pXgaCpRegs->XGAPixelBitMask    = 0xFF;
 	}
 	
     ppdev->pXgaCpRegs->XGADestColCompCond = CCCC_FALSE;
-    ppdev->pXgaCpRegs->XGAPixelBitMask    = 0xFF;
 
     //
     // Init the XGA memory manager.
@@ -188,7 +189,7 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
         //
         // private flag used for determining driver capabilities.
         //
-		DebugPrint(0, "Accelerations - WORKED\n");
+
 
         ppdev->ulfAccelerations_debug = CACHED_FONTS;
         ppdev->ulfBlitAccelerations_debug = SCRN_TO_SCRN_CPY | SOLID_PATTERN;
@@ -199,7 +200,6 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
         // !!! Turn off all accelerations for broken hardware !
         //
 
-		DebugPrint(0, "Accelerations - FAILED\n");
         ppdev->ulfAccelerations_debug = 0;
         ppdev->ulfBlitAccelerations_debug = 0;
 
@@ -332,49 +332,27 @@ DEVINFO *pDevInfo)
     ppdev->cyScreen = pVideoModeSelected->VisScreenHeight;
     ppdev->ulBitCount = pVideoModeSelected->BitsPerPlane *
                         pVideoModeSelected->NumberOfPlanes;
-						
-	pGdiInfo->ulHorzRes = ppdev->cxScreen;
-    pGdiInfo->ulVertRes = ppdev->cyScreen;
+    ppdev->lDeltaScreen = pVideoModeSelected->ScreenStride;
 
-
-    //The mask should be 0xF800, 0x07E0, 0x001F for R/G/B as XGA uses 5:6:5 color 
-	if (ppdev->ulBitCount == 16) 
-	{	
-		ppdev->flRed = 0xF800;
-		ppdev->flGreen = 0x07E0;
-		ppdev->flBlue = 0x001F;
-		
-		pGdiInfo->ulDACRed   = 5;
-		pGdiInfo->ulDACGreen = 6;
-		pGdiInfo->ulDACBlue  = 5;
-	
-	    pGdiInfo->ulHTPatternSize = HT_PATSIZE_2x2_M;
-		ppdev->lDeltaScreen = pGdiInfo->ulHorzRes * 2;	
-		pGdiInfo->ulBltAlignment = 0; 
-	}
-	else
-	{
-	    pGdiInfo->ulDACRed   = pVideoModeSelected->NumberRedBits;
-		pGdiInfo->ulDACGreen = pVideoModeSelected->NumberGreenBits;
-		pGdiInfo->ulDACBlue  = pVideoModeSelected->NumberBlueBits;
-		ppdev->flRed = pVideoModeSelected->RedMask;
-		ppdev->flGreen = pVideoModeSelected->GreenMask;
-		ppdev->flBlue = pVideoModeSelected->BlueMask;
-		ppdev->lDeltaScreen = pVideoModeSelected->ScreenStride;
-		pGdiInfo->ulBltAlignment = 1; 
-	}
+    ppdev->flRed = pVideoModeSelected->RedMask;
+    ppdev->flGreen = pVideoModeSelected->GreenMask;
+    ppdev->flBlue = pVideoModeSelected->BlueMask;
 
 
     pGdiInfo->ulVersion    = GDI_DRIVER_VERSION;
     pGdiInfo->ulTechnology = DT_RASDISPLAY;
     pGdiInfo->ulHorzSize   = pVideoModeSelected->XMillimeter;
     pGdiInfo->ulVertSize   = pVideoModeSelected->YMillimeter;
-   
+
+    pGdiInfo->ulHorzRes        = ppdev->cxScreen;
+    pGdiInfo->ulVertRes        = ppdev->cyScreen;
     pGdiInfo->ulPanningHorzRes = ppdev->cxScreen;
     pGdiInfo->ulPanningVertRes = ppdev->cyScreen;
     pGdiInfo->cBitsPixel       = pVideoModeSelected->BitsPerPlane;
     pGdiInfo->cPlanes          = pVideoModeSelected->NumberOfPlanes;
     pGdiInfo->ulVRefresh       = pVideoModeSelected->Frequency;
+    pGdiInfo->ulBltAlignment   = 1;   // We're not really accelerated, and
+                                      //   we don't care about window alignment
 
     pGdiInfo->ulLogPixelsX = pDevMode->dmLogPixels;
     pGdiInfo->ulLogPixelsY = pDevMode->dmLogPixels;
@@ -382,7 +360,9 @@ DEVINFO *pDevInfo)
     pGdiInfo->flTextCaps = TC_RA_ABLE;
     pGdiInfo->flRaster = 0;           // DDI reserves flRaster
 
-
+    pGdiInfo->ulDACRed   = pVideoModeSelected->NumberRedBits;
+    pGdiInfo->ulDACGreen = pVideoModeSelected->NumberGreenBits;
+    pGdiInfo->ulDACBlue  = pVideoModeSelected->NumberBlueBits;
 
     pGdiInfo->ulAspectX    = 0x24;    // One-to-one aspect ratio
     pGdiInfo->ulAspectY    = 0x24;
@@ -399,35 +379,80 @@ DEVINFO *pDevInfo)
 
     // RGB and CMY color info.
 
-    pGdiInfo->ciDevice.Red.x = 6700;
-    pGdiInfo->ciDevice.Red.y = 3300;
-    pGdiInfo->ciDevice.Red.Y = 0;
-    pGdiInfo->ciDevice.Green.x = 2100;
-    pGdiInfo->ciDevice.Green.y = 7100;
-    pGdiInfo->ciDevice.Green.Y = 0;
-    pGdiInfo->ciDevice.Blue.x = 1400;
-    pGdiInfo->ciDevice.Blue.y = 800;
-    pGdiInfo->ciDevice.Blue.Y = 0;
-    pGdiInfo->ciDevice.AlignmentWhite.x = 3127;
-    pGdiInfo->ciDevice.AlignmentWhite.y = 3290;
-    pGdiInfo->ciDevice.AlignmentWhite.Y = 0;
+    // try to get it from the miniport.
+    // if the miniport doesn ot support this feature, use defaults.
 
-    pGdiInfo->ciDevice.RedGamma = 20000;
-    pGdiInfo->ciDevice.GreenGamma = 20000;
-    pGdiInfo->ciDevice.BlueGamma = 20000;
+    if (EngDeviceIoControl(ppdev->hDriver,
+                         IOCTL_VIDEO_QUERY_COLOR_CAPABILITIES,
+                         NULL,
+                         0,
+                         &colorCapabilities,
+                         sizeof(VIDEO_COLOR_CAPABILITIES),
+                         &ulTemp))
+    {
+        DISPDBG((1, "XGA DISP getcolorCapabilities failed \n"));
 
-	pGdiInfo->ciDevice.Cyan.x = 1750;
-    pGdiInfo->ciDevice.Cyan.y = 3950;
+        pGdiInfo->ciDevice.Red.x = 6700;
+        pGdiInfo->ciDevice.Red.y = 3300;
+        pGdiInfo->ciDevice.Red.Y = 0;
+        pGdiInfo->ciDevice.Green.x = 2100;
+        pGdiInfo->ciDevice.Green.y = 7100;
+        pGdiInfo->ciDevice.Green.Y = 0;
+        pGdiInfo->ciDevice.Blue.x = 1400;
+        pGdiInfo->ciDevice.Blue.y = 800;
+        pGdiInfo->ciDevice.Blue.Y = 0;
+        pGdiInfo->ciDevice.AlignmentWhite.x = 3127;
+        pGdiInfo->ciDevice.AlignmentWhite.y = 3290;
+        pGdiInfo->ciDevice.AlignmentWhite.Y = 0;
+
+        pGdiInfo->ciDevice.RedGamma = 20000;
+        pGdiInfo->ciDevice.GreenGamma = 20000;
+        pGdiInfo->ciDevice.BlueGamma = 20000;
+
+    }
+    else
+    {
+
+        pGdiInfo->ciDevice.Red.x = colorCapabilities.RedChromaticity_x;
+        pGdiInfo->ciDevice.Red.y = colorCapabilities.RedChromaticity_y;
+        pGdiInfo->ciDevice.Red.Y = 0;
+        pGdiInfo->ciDevice.Green.x = colorCapabilities.GreenChromaticity_x;
+        pGdiInfo->ciDevice.Green.y = colorCapabilities.GreenChromaticity_y;
+        pGdiInfo->ciDevice.Green.Y = 0;
+        pGdiInfo->ciDevice.Blue.x = colorCapabilities.BlueChromaticity_x;
+        pGdiInfo->ciDevice.Blue.y = colorCapabilities.BlueChromaticity_y;
+        pGdiInfo->ciDevice.Blue.Y = 0;
+        pGdiInfo->ciDevice.AlignmentWhite.x = colorCapabilities.WhiteChromaticity_x;
+        pGdiInfo->ciDevice.AlignmentWhite.y = colorCapabilities.WhiteChromaticity_y;
+        pGdiInfo->ciDevice.AlignmentWhite.Y = colorCapabilities.WhiteChromaticity_Y;
+
+        // if we have a color device store the three color gamma values,
+        // otherwise store the unique gamma value in all three.
+
+        if (colorCapabilities.AttributeFlags & VIDEO_DEVICE_COLOR)
+        {
+            pGdiInfo->ciDevice.RedGamma = colorCapabilities.RedGamma;
+            pGdiInfo->ciDevice.GreenGamma = colorCapabilities.GreenGamma;
+            pGdiInfo->ciDevice.BlueGamma = colorCapabilities.BlueGamma;
+        }
+        else
+        {
+            pGdiInfo->ciDevice.RedGamma = colorCapabilities.WhiteGamma;
+            pGdiInfo->ciDevice.GreenGamma = colorCapabilities.WhiteGamma;
+            pGdiInfo->ciDevice.BlueGamma = colorCapabilities.WhiteGamma;
+        }
+
+    };
+
+    pGdiInfo->ciDevice.Cyan.x = 0;
+    pGdiInfo->ciDevice.Cyan.y = 0;
     pGdiInfo->ciDevice.Cyan.Y = 0;
-    pGdiInfo->ciDevice.Magenta.x = 4050;
-    pGdiInfo->ciDevice.Magenta.y = 2050;
+    pGdiInfo->ciDevice.Magenta.x = 0;
+    pGdiInfo->ciDevice.Magenta.y = 0;
     pGdiInfo->ciDevice.Magenta.Y = 0;
-    pGdiInfo->ciDevice.Yellow.x = 4400;
-    pGdiInfo->ciDevice.Yellow.y = 5200;
+    pGdiInfo->ciDevice.Yellow.x = 0;
+    pGdiInfo->ciDevice.Yellow.y = 0;
     pGdiInfo->ciDevice.Yellow.Y = 0;
-    pGdiInfo->ciDevice.AlignmentWhite.x = 3127;
-    pGdiInfo->ciDevice.AlignmentWhite.y = 3290;
-    pGdiInfo->ciDevice.AlignmentWhite.Y = 0;
 
     // No dye correction for raster displays.
 

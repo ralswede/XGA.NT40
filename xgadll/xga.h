@@ -7,6 +7,7 @@
 *
 \**************************************************************************/
 
+
 //
 // XGA I/O register definitions
 //
@@ -110,7 +111,6 @@
 #define PS_8_BIT    0x03
 #define PS_16_BIT   0x04
 
-//#define PEL_MAP_FORMAT  (PO_INTEL | PS_8_BIT)
 #define PEL_MAP_FORMAT_8   (PO_INTEL | PS_8_BIT)
 #define PEL_MAP_FORMAT_16  (PO_INTEL | PS_16_BIT)
 
@@ -150,7 +150,10 @@
 
 
 extern VOID vWaitForCoProcessor(PPDEV ppdev, ULONG ulDelay) ;
-
+// Added by Christian Holzapfel | 11-04-2024
+// *****************************************
+extern VOID vWaitForCoProcessorXGA2(PPDEV ppdev, ULONG ulDelay) ;
+// *****************************************
 extern BOOL bSetXgaClipping(PPDEV ppdev, CLIPOBJ *pco, PULONG pulXgaMask) ;
 
 // Acceleration Control.
