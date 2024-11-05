@@ -175,7 +175,17 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
     // Wait for the coprocessor.
     //
 
-    vWaitForCoProcessor(ppdev, 10) ;
+    // Added by Christian Holzapfel | 11-04-2024
+	// *****************************************
+	if (ppdev->ulBitCount == 16)
+	{
+		vWaitForCoProcessorXGA2(ppdev, 10);
+	}
+	else
+	{
+		vWaitForCoProcessor(ppdev, 10);
+	}
+	// *****************************************
 
     //
     // Read the byte back to see if it was blit to the screen properly.
@@ -351,8 +361,7 @@ DEVINFO *pDevInfo)
     pGdiInfo->cBitsPixel       = pVideoModeSelected->BitsPerPlane;
     pGdiInfo->cPlanes          = pVideoModeSelected->NumberOfPlanes;
     pGdiInfo->ulVRefresh       = pVideoModeSelected->Frequency;
-    pGdiInfo->ulBltAlignment   = 1;   // We're not really accelerated, and
-                                      //   we don't care about window alignment
+    pGdiInfo->ulBltAlignment   = 0;                                      
 
     pGdiInfo->ulLogPixelsX = pDevMode->dmLogPixels;
     pGdiInfo->ulLogPixelsY = pDevMode->dmLogPixels;
