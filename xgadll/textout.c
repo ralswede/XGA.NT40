@@ -107,6 +107,7 @@ BOOL DrvTextOut(
 BOOL    b;
 
         DISPDBG((2, "XGA.DLL!DrvTextOut - Entry\n"));
+		
 		// Added by Christian Holzapfel | 11-04-2024
         // *****************************************
         if (((PPDEV)pso->dhpdev)->ulBitCount == 16)
@@ -373,12 +374,19 @@ PXGACPREGS pXgaCpRegs = ((PPDEV)pso->dhpdev)->pXgaCpRegs;
                 // Note: We wait here so every thing that can be done
                 //       to get ready for the next character is done
                 //       before we have to wait for the CoProcessor.
-
+				
+				// Added by Christian Holzapfel | 11-04-2024
+				// *****************************************
                 if (((PPDEV)pso->dhpdev)->ulBitCount == 16)
-        			vWaitForCoProcessorXGA2((PPDEV)pso->dhpdev, 10);
+        		{
+					vWaitForCoProcessorXGA2((PPDEV)pso->dhpdev, 10);
+				}
         		else
+				{
         			vWaitForCoProcessor((PPDEV)pso->dhpdev, 10);
-
+				}
+				// *****************************************
+				
                 // Setup the pattern bitmap Pel interface registers.
 
                 pXgaCpRegs->XGAPixelMapIndex = PEL_MAP_B;
@@ -582,12 +590,19 @@ PXGACPREGS pXgaCpRegs = ((PPDEV)pso->dhpdev)->pXgaCpRegs;
                 // Note: We wait here so every thing that can be done
                 //       to get ready for the next character is done
                 //       before we have to wait for the CoProcessor.
-
+				
+				// Added by Christian Holzapfel | 11-04-2024
+				// *****************************************
                 if (((PPDEV)pso->dhpdev)->ulBitCount == 16)
+				{
         			vWaitForCoProcessorXGA2((PPDEV)pso->dhpdev, 10);
+				}
         		else
+				{
         			vWaitForCoProcessor((PPDEV)pso->dhpdev, 10);
-
+				}
+				// *****************************************
+				
                 // Setup the pattern bitmap Pel interface registers.
 
                 pXgaCpRegs->XGAPixelMapIndex = PEL_MAP_B;
