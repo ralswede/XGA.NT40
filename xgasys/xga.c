@@ -439,7 +439,7 @@ Return Value:
         VideoDebugPrint((1, "Xga: trying the 1 MEG aperture\n"));
 
         hwDeviceExtension->FrameBufferLength = 0x00200000;
-        hwDeviceExtension->PhysicalVideoMemoryLength = 0x00200000;
+        hwDeviceExtension->PhysicalVideoMemoryLength = 0x00100000;
 
         hwDeviceExtension->PhysicalVideoMemoryAddress.HighPart = 0x00000000;
         hwDeviceExtension->PhysicalVideoMemoryAddress.LowPart =
@@ -988,7 +988,7 @@ Return Value:
 
     if (*videoMemory == testValue) {
 
-        hwDeviceExtension->FrameBufferLength = 0x00200000;
+        hwDeviceExtension->FrameBufferLength = 0x001000000;
 
     } else {
 
