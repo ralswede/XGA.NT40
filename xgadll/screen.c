@@ -123,7 +123,7 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
     ppdev->pXgaCpRegs->XGAPixMapHeight  = (USHORT) ppdev->cyScreen - 1;
 	if (ppdev->ulBitCount == 16)  
 	{
-		DebugPrint(0, "XGAPixMapFormat 16\n");
+		//DebugPrint(0, "XGAPixMapFormat 16\n");
 		ppdev->pXgaCpRegs->XGAPixMapFormat  = PEL_MAP_FORMAT_16;
 		// Added by Christian Holzapfel | 11-04-2024
 		// *****************************************
@@ -133,13 +133,10 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
 	}
 	else
 	{
-		DebugPrint(0, "XGAPixMapFormat 8\n");
+		//DebugPrint(0, "XGAPixMapFormat 8\n");
 		ppdev->pXgaCpRegs->XGAPixMapFormat  = PEL_MAP_FORMAT_8;
 		ppdev->pXgaCpRegs->XGAPixelBitMask    = 0xFF;
-		// Added by Christian Holzapfel | 11-04-2024
-		// *****************************************
 		ppdev->pXgaCpRegs->XGACarryChainMask = 0xFF;
-		// *****************************************
 	}
 	
     ppdev->pXgaCpRegs->XGADestColCompCond = CCCC_FALSE;
