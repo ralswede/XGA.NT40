@@ -1,6 +1,6 @@
 ; XGA2MBNT.inf
 ;
-; Installation file (.inf) for the XGA/XGA2/Double Edge device.
+; Installation file (.inf) for the XGA/XGA2/Double Edge Graphics Adapters.
 ;
 ; (c) Copyright 2024 Ryan Alswede, Christian Holzapfel
 ; 
@@ -8,7 +8,7 @@
                                                                                                                        
 [Version]                                                                                                              
 Signature="$CHICAGO$"                                                                                                
-Provider=%MCH%                                                                                                        
+Provider=%MSC%                                                                                                        
 ClassGUID={4D36E968-E325-11CE-BFC1-08002BE10318}                                                                       
 Class=Display                                                                                                          
                                                                                                                        
@@ -21,10 +21,12 @@ xga3.Display   = 11  ; system32
 ;                                                                                                                      
                                                                                                                        
 [Manufacturer]                                                                                                         
-%MCH% = MCAHero.Mfg                                                                                                      
+%MSC% = IBM.Mfg                                                                                                      
                                                                                                                        
-[MCAHero.Mfg]                                                                                                               
-%MCH% = xga3
+[IBM.Mfg]                                                                                                               
+%XGA.DeviceDesc%  = xga3
+%XGA2.DeviceDesc% = xga3
+%XGA3.DeviceDesc% = xga3
                                                                                                               
 ;                                                                                                                      
 ; General installation section                                                                                         
@@ -106,7 +108,11 @@ SERVICEROOT    = System\CurrentControlSet\Services
 ;                                                                                                                      
 ; Localizable Strings                                                                                                  
 ;                                                                                                                      
-                                                                                                                       
+
+XGA.DeviceDesc  = "IBM XGA MCA"
+XGA2.DeviceDesc = "IBM XGA-2 MCA"                                                                                                                       
+XGA3.DeviceDesc = "Nth Graphics Double Edge MCA"                                                                                                                       
 DiskId  = "XGA/XGA2/Double Edge NT Driver Disk"                                                                        
-GraphAdap = "Graphics Adapter"                                                                                   
-MCH  = "MCA Hero Graphics"                                                                                                       
+GraphAdap = "Graphics Adapter"     
+MSC = "IBM XGA/XGA2 Graphics Adapters"                                                                              
+                                                                                                      
