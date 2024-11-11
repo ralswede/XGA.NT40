@@ -1050,7 +1050,7 @@ Return Value:
 		VideoPortSetRegistryParameters(hwDeviceExtension,
                                    L"HardwareInformation.AdapterString",
                                    L"IBM XGA Based Adapter",
-                                   sizeof(L"IBM XGA Based Adapter"));	
+                                   sizeof(L"IBM XGA Based Adapter"));
 	}
 	else if (hwDeviceExtension->BoardType == XGA_TYPE_2)
 	{
@@ -1068,8 +1068,13 @@ Return Value:
 		VideoPortSetRegistryParameters(hwDeviceExtension,
                                    L"HardwareInformation.AdapterString",
                                    L"IBM XGA-2 Based Adapter",
-                                   sizeof(L"IBM XGA-2 Based Adapter"));	
+                                   sizeof(L"IBM XGA-2 Based Adapter"));		
 	}
+	
+	VideoPortSetRegistryParameters(hwDeviceExtension,
+                            L"HardwareInformation.BiosString",
+                            L"VGA Compatible",
+                            sizeof(L"VGA Compatible"));	
 
 						
 	//
