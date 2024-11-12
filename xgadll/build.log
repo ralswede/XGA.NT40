@@ -3,8 +3,6 @@ BUILD: Examining c:\ddk\src\video\displays\xgadll directory for files to compile
 Compiling c:\ddk\src\video\displays\xgadll directory ********************
 'nmake.exe /c BUILDMSG=Stop. -i NTTEST= UMTEST= NOLINK=1 NOPASS0=1 386=1'
 	rc -l 409 -z "MS Sans Serif,Helv/MS Shell Dlg"  -r -fo obj\i386\res.tmp -D_X86_=1 -Di386=1  -DSTD_CALL -DCONDITION_HANDLING=1 -DNT_UP=1  -DNT_INST=0 -DWIN32=100 -D_NT1X_=100 -DWINNT=1 -D_WIN32_WINNT=0x0400    -DWIN32_LEAN_AND_MEAN=1 -DDEVL=1 -DFPO=1    -DNDEBUG -D_IDWBUILD  -IC:\DDK\inc -IC:\DDK\inc -IC:\DDK\inc -IC:\DDK\inc .\res.rc
-.\RES.RC(30) : warning RC4005: 'VER_PRODUCTVERSION_STR' : redefinition
-.\RES.RC(31) : warning RC4005: 'VER_PRODUCTVERSION' : redefinition
 cl -nologo -Ii386\ -I. -IC:\DDK\inc -IC:\DDK\inc -IC:\DDK\inc -IC:\DDK\inc -D_X86_=1 -Di386=1  -DSTD_CALL -DCONDITION_HANDLING=1 -DNT_UP=1  -DNT_INST=0 -DWIN32=100 -D_NT1X_=100 -DWINNT=1 -D_WIN32_WINNT=0x0400    -DWIN32_LEAN_AND_MEAN=1 -DDEVL=1 -DFPO=1    -DNDEBUG -D_IDWBUILD    /c /Zel /Zp8 /Gy -cbstring /W3 /WX /Gz  /QIfdiv- /QIf  /Gi- /Gm- /GX- /GR- /GF   /Oxs /Oy   -FIC:\DDK\inc\warning.h  .\bitblt.c
 bitblt.c
 cl -nologo -Ii386\ -I. -IC:\DDK\inc -IC:\DDK\inc -IC:\DDK\inc -IC:\DDK\inc -D_X86_=1 -Di386=1  -DSTD_CALL -DCONDITION_HANDLING=1 -DNT_UP=1  -DNT_INST=0 -DWIN32=100 -D_NT1X_=100 -DWINNT=1 -D_WIN32_WINNT=0x0400    -DWIN32_LEAN_AND_MEAN=1 -DDEVL=1 -DFPO=1    -DNDEBUG -D_IDWBUILD    /c /Zel /Zp8 /Gy -cbstring /W3 /WX /Gz  /QIfdiv- /QIf  /Gi- /Gm- /GX- /GR- /GF   /Oxs /Oy   -FIC:\DDK\inc\warning.h  .\color.c
@@ -33,9 +31,9 @@ xgasup.c
 Stop. 
 Linking c:\ddk\src\video\displays\xgadll directory ********************
 'nmake.exe /c BUILDMSG=Stop. -i LINKONLY=1 NOPASS0=1 NTTEST= UMTEST= 386=1'
-	link -out:C:\DDK\lib\i386\free\xga3.dll -machine:i386 @C:\DOCUME~1\Ryan\LOCALS~1\Temp\nma05080.
-Microsoft (R) Incremental Linker Version 6.00.8168
-Copyright (C) Microsoft Corp 1992-1998. All rights reserved.
+	link -out:C:\DDK\lib\i386\free\xga3.dll -machine:i386 @C:\DOCUME~1\Ryan\LOCALS~1\Temp\nma03676.
+Microsoft (R) 32-Bit Incremental Linker Version 3.00.5270
+Copyright (C) Microsoft Corp 1992-1995. All rights reserved.
 
 -MERGE:_PAGE=PAGE 
 -MERGE:_TEXT=.text 

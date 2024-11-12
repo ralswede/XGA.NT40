@@ -43,7 +43,8 @@ CopyFiles=xga3.Miniport, xga3.Display
 xga3.sys                                                                                                                 
                                                                                                                        
 [xga3.Display]                                                                                                           
-xga3.dll                                                                                                                     
+xga3.dll          
+vga256.dll                                                                                                           
                                                                                                                        
 ;                                                                                                                      
 ; Service Installation                                                                                                 
