@@ -7,7 +7,7 @@
 ;                                                                                                                    
                                                                                                                        
 [Version]                                                                                                              
-Signature="$CHICAGO$"                                                                                                
+Signature="$Windows NT$"                                                                                             
 Provider=%MSC%                                                                                                        
 ClassGUID={4D36E968-E325-11CE-BFC1-08002BE10318}                                                                       
 Class=Display                                                                                                          
