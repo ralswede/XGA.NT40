@@ -4,12 +4,12 @@
 ; Copyright (C) UnalZ, 2008.                    XGA2NT.INF
 ; ----------------------------------------------------------
 ; BETA test: April 2008
-;
+; 
+; Ryan Alswede  11-14-2024
 ; Updated for for use with custom framebuf dll 
 ; //////////////////////////////////////////////////////////
 
 [Version]
-;Signature="$CHICAGO$"
 Signature="$Windows NT$"
 Provider=%MCB%
 ClassGUID={4D36E968-E325-11CE-BFC1-08002BE10318}
@@ -37,6 +37,7 @@ XGA2.Display = 11  ; system32
 
 [XGA2]                                                                                                                   
 CopyFiles=XGA2.Miniport
+CopyFiles=XGA2.Display
 
 [XGA2.Miniport]                                                                                                          
 xga2.sys  
@@ -68,9 +69,6 @@ HKR,,TypesSupported,0x00010001,7
 
 [XGA2.SoftwareSettings]
 AddReg = XGA2_SoftwareDeviceSettings
-
-; Not VGA compatible (no VGA emulation in XGA modes)
-; xga.dll and vga256.dll must have been installed by NT
 
 [XGA2_SoftwareDeviceSettings]
 HKR,,InstalledDisplayDrivers, %REG_MULTI_SZ%, framebuf, vga256
