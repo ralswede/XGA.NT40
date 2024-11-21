@@ -37,6 +37,7 @@ XGA2.Display = 11  ; system32
 
 [XGA2]                                                                                                                   
 CopyFiles=XGA2.Miniport
+CopyFiles=XGA2.Display
 
 [XGA2.Miniport]                                                                                                          
 xga2.sys  
