@@ -1,3 +1,4 @@
+
 /*++
 
 Copyright (c) 1990-1992  Microsoft Corporation
@@ -15,12 +16,30 @@ Abstract:
     XGA / XGA-2 adapters only, and allows multiple MCA XGA adapters -
     including mixed XGA-1/XGA-2 configurations (e.g. an onboard 512K
     XGA-1 plus an add-in XGA-2 card, as found on a model 8590) - to be
-    enumerated and bound as separate device instances. Each adapter's
-    board type and installed VRAM size is recorded in a system-wide
-    inventory as it is discovered, so that the set of modes offered on
-    every adapter in the machine is constrained to what the weakest
-    adapter present can also support, matching the behavior of IBM's
-    MXGA driver for OS/2.
+    enumerated. Each adapter's board type and installed VRAM size is
+    recorded in a system-wide inventory as it is discovered, so that the
+    set of modes offered on every adapter in the machine is constrained
+    to what the weakest adapter present can also support, matching the
+    behavior of IBM's MXGA driver for OS/2.
+
+    Dual-card (side-by-side extended desktop) support: if exactly two
+    MCA XGA/XGA-2 adapters are found, they are merged into a SINGLE
+    device extension / \Device\VideoN instance (card 0 = left/primary
+    monitor, card 1 = right/secondary monitor) instead of being bound as
+    two independent devices. This is required because NT4's GDI/DDI
+    model only ever binds one display driver instance to one miniport
+    device - xgadll has no way to be handed a second miniport handle by
+    the OS. With both cards merged under one device, xgadll (which does
+    own that one handle) can address either card's coprocessor/VRAM via
+    the CardIndex field of VIDEO_XGA_CARD_REQUEST on the existing
+    IOCTL_VIDEO_XGA_MAP_COPROCESSOR / IOCTL_VIDEO_MAP_VIDEO_MEMORY calls,
+    and build a combined, extended desktop surface in its own address
+    space. A third or subsequent MCA XGA adapter, if present, is ignored
+    for dual-card merging purposes (only the first two found are used).
+
+    If only one MCA XGA/XGA-2 adapter is present, this driver behaves
+    exactly as the original single-card driver - none of the Card2
+    logic is exercised.
 
 Environment:
 
@@ -98,6 +117,14 @@ XgaSetMode(
     ULONG ModeNum
     );
 
+VOID
+XgaSetModeOnCard(
+    PHW_DEVICE_EXTENSION HwDeviceExtension,
+    ULONG ModeNum,
+    UCHAR BoardType,
+    ULONG IoRegBaseAddress
+    );
+
 VP_STATUS
 XgaGetBankSelectCode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
@@ -115,6 +142,13 @@ XgaGetRegistryParamaterCallback(
     ULONG ValueLength
     );
 
+VOID
+XgaResetHWCard(
+    PHW_DEVICE_EXTENSION HwDeviceExtension,
+    ULONG IoRegBaseAddress,
+    PVOID PassThroughPort
+    );
+
 #if defined(ALLOC_PRAGMA)
 #pragma alloc_text(PAGE,DriverEntry)
 #pragma alloc_text(PAGE,XgaFindAdapter)
@@ -122,11 +156,12 @@ XgaGetRegistryParamaterCallback(
 #pragma alloc_text(PAGE,XgaStartIO)
 #pragma alloc_text(PAGE,XgaGetPosData)
 #pragma alloc_text(PAGE,XgaSetMode)
+#pragma alloc_text(PAGE,XgaSetModeOnCard)
 #pragma alloc_text(PAGE,XgaGetBankSelectCode)
 #pragma alloc_text(PAGE,XgaGetRegistryParamaterCallback)
 #endif
 
-// XgaResetHW is not pageable
+// XgaResetHW / XgaResetHWCard are not pageable
 
 
 ULONG
@@ -200,9 +235,11 @@ Return Value:
     //
     // This driver supports Micro Channel XGA/XGA-2 adapters only. Each
     // MCA slot that reports a valid XGA adapter ID will result in
-    // XgaFindAdapter() being called again (via *Again), allowing more
-    // than one physical card - including mixed XGA-1/XGA-2
-    // configurations - to be bound as separate \Device\VideoN instances.
+    // XgaFindAdapter() being called again (via *Again) UNTIL two
+    // adapters have been found and merged into a single device
+    // extension for dual-card extended-desktop support - see
+    // XgaFindAdapter() for details. A third or later adapter, if
+    // present, is ignored.
     //
 
     hwInitData.AdapterInterfaceType = MicroChannel;
@@ -215,6 +252,137 @@ Return Value:
     return initializationStatus;
 
 } // end DriverEntry()
+
+
+VOID
+XgaProbeCardMemory(
+    PHW_DEVICE_EXTENSION HwDeviceExtension,
+    ULONG IoRegBaseAddress,
+    PVOID A0000MemoryAddress,
+    PULONG FrameBufferLength
+    )
+
+/*++
+
+Routine Description:
+
+    Probes a single XGA/XGA-2 card for its true installed VRAM size, using
+    the 64K aperture mapped at A0000 for that card. This logic is
+    unchanged from the original single-card probe sequence in
+    XgaFindAdapter() - it has simply been factored out into its own
+    routine so it can be run against either the primary card's resources
+    or (when a second card is found) the secondary card's resources,
+    without duplicating the sequence of register pokes inline twice.
+
+Arguments:
+
+    HwDeviceExtension - Supplies a pointer to the miniport's device
+        extension (only used here to satisfy the XGAOUT/XGAIN macros,
+        which are written in terms of a local named hwDeviceExtension -
+        see below).
+
+    IoRegBaseAddress - I/O base address of the XGA registers for the card
+        being probed.
+
+    A0000MemoryAddress - Virtual address of the 64K aperture mapped at
+        A0000 for the card being probed.
+
+    FrameBufferLength - Returns the detected VRAM size in bytes
+        (0x80000, 0x100000, or 0x200000).
+
+--*/
+
+{
+
+    //
+    // The XGAOUT/XGAIN macros reference a local variable named
+    // hwDeviceExtension and use its IoRegBaseAddress field; alias a local
+    // device extension whose IoRegBaseAddress is the one we were asked to
+    // probe, so these macros operate on the correct card.
+    //
+
+    HW_DEVICE_EXTENSION localExtension;
+    PHW_DEVICE_EXTENSION hwDeviceExtension = &localExtension;
+    volatile PUCHAR videoMemory;
+    UCHAR testValue;
+
+    hwDeviceExtension->IoRegBaseAddress = IoRegBaseAddress;
+
+    videoMemory = A0000MemoryAddress;
+    testValue = 0xA5;
+
+    //
+    // Disable interrupts, blank the palette, and switch into a temporary
+    // Extended Graphics Mode so we can probe video memory through the
+    // 64K aperture at A0000.
+    //
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | INT_ENABLE_REG), 0x00);
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | INDEX_REG), 0x64);
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | DATA_IN_REG), 0x00);
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | OP_MODE_REG), 0x04);
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | APP_CTL_REG), 0x01);
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | APP_INDEX_REG), 0x0C);
+
+    //
+    // To test if memory is present, use a test value (make sure the same
+    // value is not currently stored in video memory, otherwise change it),
+    // store it in video memory, and read it back. If the value is identical
+    // to the value we stored then there must be memory present at that
+    // location (which, in this case, means we have 1 MEG of Video RAM).
+    //
+
+    if (*videoMemory == testValue) {
+
+        testValue >>= 1;
+    }
+
+    *videoMemory = testValue;
+
+    if (*videoMemory == testValue) {
+
+        *FrameBufferLength = 0x00100000;
+
+    } else {
+
+        *FrameBufferLength = 0x00080000;
+    }
+
+    //
+    // Now try the same at another video memory location between 1 and 2 MEG.
+    //
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | APP_INDEX_REG), 0x1C);
+
+    if (*videoMemory == testValue) {
+
+        testValue >>= 1;
+    }
+
+    *videoMemory = testValue;
+
+    if (*videoMemory == testValue) {
+
+        *FrameBufferLength = 0x00200000;
+    }
+
+    VideoDebugPrint((2, "XgaProbeCardMemory\n  The amount of memory on the card is %d K\n",
+                   *FrameBufferLength >> 10));
+
+} // end XgaProbeCardMemory()
+
 
 VP_STATUS
 XgaFindAdapter(
@@ -235,8 +403,24 @@ Routine Description:
     the adapter.
 
     This build only recognizes Micro Channel (MCA) XGA/XGA-2 adapters.
-    Multiple adapters can be enumerated across successive calls (indicated
-    via *Again), one \Device\VideoN instance per physical MCA slot found.
+
+    Dual-card extended desktop support: the FIRST MCA XGA/XGA-2 adapter
+    found is set up exactly as in the original single-card driver, using
+    the existing (unrenamed) fields of the device extension, and *Again
+    is set to request a second call. On that SECOND call, rather than
+    being handed a fresh, zeroed device extension as a normal multi-device
+    miniport would be, we instead detect that a card has already been
+    found (HwDeviceExtension->NumCards == 1) and, if a second MCA XGA
+    adapter is present, fold its resources into the SAME device extension
+    under the Card2-prefixed fields, then clear *Again so no third call -
+    and no second \Device\VideoN instance - is created. If no second
+    adapter is found, *Again is simply left at 0 and the driver proceeds
+    as a normal single-card device, identical to before this change.
+
+    A third physical MCA XGA adapter, if present, is intentionally
+    ignored (XgaGetPosData/VideoPortGetDeviceData will simply not be
+    called for it, because *Again is cleared once two cards have been
+    merged).
 
     As each adapter is found, its true installed VRAM size is probed and
     recorded (along with its board type) in the system-wide
@@ -249,7 +433,9 @@ Routine Description:
 Arguments:
 
     HwDeviceExtension - Supplies the miniport driver's adapter storage. This
-        storage is initialized to zero before this call.
+        storage is initialized to zero before this call ONLY on the very
+        first call for this device; see Routine Description above for how
+        the second call is distinguished from a brand new device.
 
     HwContext - Supplies the context value which was passed to
         VideoPortInitialize().
@@ -299,8 +485,17 @@ Return Value:
     VIDEO_ACCESS_RANGE accessRange[NUM_XGA_ACCESS_RANGES];
     PHYSICAL_ADDRESS A0000PhysicalAddress;
     PHYSICAL_ADDRESS passThroughPort;
-    volatile PUCHAR videoMemory;
-    UCHAR testValue;
+    BOOLEAN findingSecondCard;
+
+    UCHAR foundBoardType;
+    PHYSICAL_ADDRESS foundRomBaseAddress;
+    PHYSICAL_ADDRESS foundIoRegBaseAddress;
+    PHYSICAL_ADDRESS foundVideoMemoryAddress;
+    ULONG foundVideoMemoryLength;
+    PHYSICAL_ADDRESS foundCoProcessorAddress;
+    ULONG foundIoRegBaseAddressMapped;
+    PVOID foundA0000MemoryAddress;
+    ULONG foundFrameBufferLength;
 
     A0000PhysicalAddress.LowPart = 0x000A0000;
     A0000PhysicalAddress.HighPart = 0x00000000;
@@ -309,7 +504,9 @@ Return Value:
     passThroughPort.HighPart = 0x00000000;
 
     //
-    // Indicate we do not wish to be called over
+    // Indicate we do not wish to be called over, by default. This gets
+    // overridden below the first time through, once we know whether we
+    // should ask for a second call to look for a second card.
     //
 
     *Again = 0;
@@ -336,20 +533,39 @@ Return Value:
     }
 
     //
+    // Determine whether this call is looking for the first card in this
+    // device extension, or the second (dual-card merge) card. The port
+    // driver re-uses the SAME device extension memory across repeated
+    // *Again calls for a given device, so hwDeviceExtension->NumCards
+    // reliably tells us which pass we are on.
+    //
+
+    findingSecondCard = (hwDeviceExtension->NumCards == 1);
+
+    //
     // Reset the Slot number being examined to zero if we are processing
-    // a new bus number.
+    // a new bus number. Note this intentionally does NOT reset XgaSlot
+    // when looking for the second card on the same bus, since we must
+    // continue scanning forward from where the first card was found
+    // rather than re-finding the same slot.
     //
 
     if (BusNumber != (LONG)ConfigInfo->SystemIoBusNumber) {
 
         BusNumber = ConfigInfo->SystemIoBusNumber;
-        XgaSlot = 0;
 
+        if (!findingSecondCard) {
+
+            XgaSlot = 0;
+        }
     }
 
     //
     // Use the POS information from the bus to identify an XGA/XGA-2
-    // adapter in the current slot.
+    // adapter in the current slot. XgaGetPosData() advances XgaSlot as it
+    // scans, so calling it again here (whether this is the first or
+    // second card being looked for) picks up scanning from the next
+    // un-examined slot.
     //
 
     if (NO_ERROR != VideoPortGetDeviceData(hwDeviceExtension,
@@ -357,40 +573,43 @@ Return Value:
                                            XgaGetPosData,
                                            &posData)) {
 
-        VideoDebugPrint((2, "Xga: GetDeviceData returned error - probably no XGAs\n"));
+        VideoDebugPrint((2, "Xga: GetDeviceData returned error - probably no (more) XGAs\n"));
+
+        //
+        // If we already have one card successfully configured and simply
+        // did not find a second one, that is not an error - we just
+        // proceed as a single-card device. *Again is already 0 from the
+        // top of this routine in that case.
+        //
+
+        if (findingSecondCard) {
+
+            return NO_ERROR;
+        }
 
         return ERROR_DEV_NOT_EXIST;
     }
 
     //
-    // Since we got the data properly, make sure we get called again to find
-    // the next XGA adapter in a subsequent MCA slot. This is what allows a
-    // second (or further) physical card - of either board type - to be
-    // bound as its own device instance.
+    // Determine the XGA registers by munging the POS register data. This
+    // computes the resource set for the card that was JUST found (which
+    // may be the first or second physical card) into local variables;
+    // these get committed into either the primary or Card2-prefixed
+    // fields of the device extension further down, once we know this
+    // card's resources do not conflict with anything already claimed.
     //
 
-    *Again = 1;
+    ioAddress = (posData.PosData1 & 0x0E) >> 1;
 
-    //
-    // Determine the XGA registers by munging the POS register data.
-    //
-
-    ioAddress = (posData.PosData1 &0x0E) >> 1;
-
-    hwDeviceExtension->PhysicalRomBaseAddress.LowPart =
+    foundRomBaseAddress.LowPart =
         (((posData.PosData1 & 0xF0) >> 4) * 0x2000) + 0xC0000;
-    hwDeviceExtension->PhysicalRomBaseAddress.HighPart = 0x00000000;
+    foundRomBaseAddress.HighPart = 0x00000000;
 
-    hwDeviceExtension->PhysicalIoRegBaseAddress.LowPart = 0x2100 +
-        (ioAddress << 4);
-    hwDeviceExtension->PhysicalIoRegBaseAddress.HighPart = 0x00000000;
-
-    //
-    // Choose a size of 1 MEG for video memory as a default
-    //
+    foundIoRegBaseAddress.LowPart = 0x2100 + (ioAddress << 4);
+    foundIoRegBaseAddress.HighPart = 0x00000000;
 
     //
-    // Find the virtual address of the frame buffer. Get the 4Meg aperture
+    // Find the physical address of the frame buffer. Get the 4Meg aperture
     // if it is available, otherwise take the 1MEG.
     //
 
@@ -398,25 +617,23 @@ Return Value:
 
         VideoDebugPrint((1, "Xga: using the 4 MEG Aperture\n"));
 
-        hwDeviceExtension->FrameBufferLength = 0x00100000;
-        hwDeviceExtension->PhysicalVideoMemoryLength = 0x00400000;
+        foundFrameBufferLength = 0x00100000;
+        foundVideoMemoryLength = 0x00400000;
 
-        hwDeviceExtension->PhysicalVideoMemoryAddress.HighPart = 0x00000000;
-        hwDeviceExtension->PhysicalVideoMemoryAddress.LowPart =
-            ((posData.PosData3 &0xFE) << 24) | (ioAddress << 22);
+        foundVideoMemoryAddress.HighPart = 0x00000000;
+        foundVideoMemoryAddress.LowPart =
+            ((posData.PosData3 & 0xFE) << 24) | (ioAddress << 22);
 
     } else {
 
         VideoDebugPrint((1, "Xga: trying the 1 MEG aperture\n"));
 
-        hwDeviceExtension->FrameBufferLength = 0x00100000;
-        hwDeviceExtension->PhysicalVideoMemoryLength = 0x00100000;
+        foundFrameBufferLength = 0x00100000;
+        foundVideoMemoryLength = 0x00100000;
 
-        hwDeviceExtension->PhysicalVideoMemoryAddress.HighPart = 0x00000000;
-        hwDeviceExtension->PhysicalVideoMemoryAddress.LowPart =
-            (posData.PosData4 &0x0F) << 20;
-
-
+        foundVideoMemoryAddress.HighPart = 0x00000000;
+        foundVideoMemoryAddress.LowPart =
+            (posData.PosData4 & 0x0F) << 20;
     }
 
     //
@@ -425,9 +642,20 @@ Return Value:
     // no ISA-style 64K banked fallback in this build.
     //
 
-    if (!hwDeviceExtension->PhysicalVideoMemoryAddress.LowPart) {
+    if (!foundVideoMemoryAddress.LowPart) {
 
         VideoDebugPrint((1, "Xga: no linear aperture available - failing\n"));
+
+        if (findingSecondCard) {
+
+            //
+            // Treat a bad second card exactly like "no second card found" -
+            // fall back to single-card operation rather than failing the
+            // whole device.
+            //
+
+            return NO_ERROR;
+        }
 
         return ERROR_INVALID_PARAMETER;
     }
@@ -436,19 +664,23 @@ Return Value:
     // Get the address of the Co processor registers.
     //
 
-    hwDeviceExtension->PhysicalCoProcessorAddress.LowPart = 0x80 * ioAddress
-        + 0x1C00 + hwDeviceExtension->PhysicalRomBaseAddress.LowPart;
-    hwDeviceExtension->PhysicalCoProcessorAddress.HighPart = 0x00000000;
+    foundCoProcessorAddress.LowPart = 0x80 * ioAddress
+        + 0x1C00 + foundRomBaseAddress.LowPart;
+    foundCoProcessorAddress.HighPart = 0x00000000;
 
     //
-    // Save the data for access ranges
+    // Save the data for access ranges. Both cards' access ranges are
+    // verified together so that VideoPortVerifyAccessRanges() will catch
+    // any overlap between the two cards' resources (which would indicate
+    // we mis-identified something) as well as conflicts with any other
+    // device in the system.
     //
 
     //
     // Io Ports
     //
 
-    accessRange[0].RangeStart = hwDeviceExtension->PhysicalIoRegBaseAddress;
+    accessRange[0].RangeStart = foundIoRegBaseAddress;
     accessRange[0].RangeLength = XGA_IO_REGS_SIZE;
     accessRange[0].RangeInIoSpace = TRUE;
     accessRange[0].RangeVisible = TRUE;
@@ -458,8 +690,8 @@ Return Value:
     // Video Memory
     //
 
-    accessRange[1].RangeStart = hwDeviceExtension->PhysicalVideoMemoryAddress;
-    accessRange[1].RangeLength = hwDeviceExtension->PhysicalVideoMemoryLength;
+    accessRange[1].RangeStart = foundVideoMemoryAddress;
+    accessRange[1].RangeLength = foundVideoMemoryLength;
     accessRange[1].RangeInIoSpace = FALSE;
     accessRange[1].RangeVisible = TRUE;
     accessRange[1].RangeShareable = FALSE;
@@ -468,7 +700,7 @@ Return Value:
     // ROM Location
     //
 
-    accessRange[2].RangeStart = hwDeviceExtension->PhysicalRomBaseAddress;
+    accessRange[2].RangeStart = foundRomBaseAddress;
     accessRange[2].RangeLength = XGA_ROM_SIZE;
     accessRange[2].RangeInIoSpace = FALSE;
     accessRange[2].RangeVisible = TRUE;
@@ -478,7 +710,7 @@ Return Value:
     // Co-Processor Location
     //
 
-    accessRange[3].RangeStart = hwDeviceExtension->PhysicalCoProcessorAddress;
+    accessRange[3].RangeStart = foundCoProcessorAddress;
     accessRange[3].RangeLength = XGA_CO_PROCESSOR_REGS_SIZE;
     accessRange[3].RangeInIoSpace = FALSE;
     accessRange[3].RangeVisible = TRUE;
@@ -518,13 +750,24 @@ Return Value:
 
     if (status != NO_ERROR) {
 
-        return status;
+        if (findingSecondCard) {
 
+            //
+            // A conflicting second card is treated like no second card -
+            // fall back to single-card operation.
+            //
+
+            return NO_ERROR;
+        }
+
+        return status;
     }
 
     //
     // Clear out the Emulator entries and the state size since this driver
-    // does not support them.
+    // does not support them. (Harmless to repeat on the second-card pass;
+    // ConfigInfo is shared/already-initialized state from the port driver
+    // for this one device.)
     //
 
     ConfigInfo->NumEmulatorAccessEntries = 0;
@@ -542,7 +785,7 @@ Return Value:
     // memory afterwards.
     //
 
-    if ( ( hwDeviceExtension->A0000MemoryAddress =
+    if ( ( foundA0000MemoryAddress =
               VideoPortGetDeviceBase(hwDeviceExtension,
                                      A0000PhysicalAddress,
                                      0x00010000,
@@ -550,40 +793,53 @@ Return Value:
 
         VideoDebugPrint((2, "XgaFindAdapter - Fail to get A0000 aperture address\n"));
 
-        return ERROR_INVALID_PARAMETER;
+        if (findingSecondCard) {
 
+            return NO_ERROR;
+        }
+
+        return ERROR_INVALID_PARAMETER;
     }
 
     //
     // Map in the IO registers so we can access them.
     //
 
-    if ( ( hwDeviceExtension->IoRegBaseAddress = (ULONG)
+    if ( ( foundIoRegBaseAddressMapped = (ULONG)
               VideoPortGetDeviceBase(hwDeviceExtension,
-                                     hwDeviceExtension->PhysicalIoRegBaseAddress,
+                                     foundIoRegBaseAddress,
                                      XGA_IO_REGS_SIZE,
                                      TRUE)) == 0) {
 
         VideoDebugPrint((2, "XgaFindAdapter - Fail to get io register addresses\n"));
 
-        return ERROR_INVALID_PARAMETER;
+        if (findingSecondCard) {
 
+            return NO_ERROR;
+        }
+
+        return ERROR_INVALID_PARAMETER;
     }
 
     //
-    // Map in the pass-throught port.
+    // Map in the pass-throught port. Only needs to be done once - both
+    // cards share the same VGA pass-through port - so skip this on the
+    // second-card pass (hwDeviceExtension->PassThroughPort is already
+    // set from the first pass).
     //
 
-    if ( ( hwDeviceExtension->PassThroughPort =
-              VideoPortGetDeviceBase(hwDeviceExtension,
-                                     passThroughPort,
-                                     1,
-                                     TRUE)) == 0) {
+    if (!findingSecondCard) {
 
-        VideoDebugPrint((2, "XgaFindAdapter - Fail to get io register addresses\n"));
+        if ( ( hwDeviceExtension->PassThroughPort =
+                  VideoPortGetDeviceBase(hwDeviceExtension,
+                                         passThroughPort,
+                                         1,
+                                         TRUE)) == 0) {
 
-        return ERROR_INVALID_PARAMETER;
+            VideoDebugPrint((2, "XgaFindAdapter - Fail to get io register addresses\n"));
 
+            return ERROR_INVALID_PARAMETER;
+        }
     }
 
     //
@@ -596,95 +852,84 @@ Return Value:
     // capable XGA-2 card installed alongside it.
     //
 
-    videoMemory = hwDeviceExtension->A0000MemoryAddress;
-    testValue = 0xA5;
+    XgaProbeCardMemory(hwDeviceExtension,
+                       foundIoRegBaseAddressMapped,
+                       foundA0000MemoryAddress,
+                       &foundFrameBufferLength);
 
     //
-    // Disable interrupts, blank the palette, and switch into a temporary
-    // Extended Graphics Mode so we can probe video memory through the
-    // 64K aperture at A0000.
+    // Determine this card's board type from the POS data captured by
+    // XgaGetPosData() into hwDeviceExtension->BoardType (it always writes
+    // there regardless of which pass we are on).
     //
 
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | INT_ENABLE_REG), 0x00);
-
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | INDEX_REG), 0x64);
-
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | DATA_IN_REG), 0x00);
-
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | OP_MODE_REG), 0x04);
-
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | APP_CTL_REG), 0x01);
-
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | APP_INDEX_REG), 0x0C);
+    foundBoardType = hwDeviceExtension->BoardType;
 
     //
-    // To test if memory is present, use a test value (make sure the same
-    // value is not currently stored in video memory, otherwise change it),
-    // store it in video memory, and read it back. If the value is identical
-    // to the value we stored then there must be memory present at that
-    // location (which, in this case, means we have 1 MEG of Video RAM).
+    // Commit this card's resources into the device extension - either the
+    // primary fields (first card) or the Card2-prefixed fields (second
+    // card).
     //
 
-    if (*videoMemory == testValue) {
+    if (!findingSecondCard) {
 
-        testValue >>= 1;
+        hwDeviceExtension->PhysicalRomBaseAddress = foundRomBaseAddress;
+        hwDeviceExtension->PhysicalIoRegBaseAddress = foundIoRegBaseAddress;
+        hwDeviceExtension->PhysicalVideoMemoryAddress = foundVideoMemoryAddress;
+        hwDeviceExtension->PhysicalVideoMemoryLength = foundVideoMemoryLength;
+        hwDeviceExtension->PhysicalCoProcessorAddress = foundCoProcessorAddress;
+        hwDeviceExtension->IoRegBaseAddress = foundIoRegBaseAddressMapped;
+        hwDeviceExtension->A0000MemoryAddress = foundA0000MemoryAddress;
+        hwDeviceExtension->FrameBufferLength = foundFrameBufferLength;
+        hwDeviceExtension->BoardType = foundBoardType;
 
-    }
+        hwDeviceExtension->NumCards = 1;
 
-    *videoMemory = testValue;
+        //
+        // We have successfully found and configured the first card. Ask
+        // to be called again so we have a chance to find a second card
+        // and merge it into this same device extension.
+        //
 
-    if (*videoMemory == testValue) {
-
-        hwDeviceExtension->FrameBufferLength = 0x00100000;
+        *Again = 1;
 
     } else {
 
-        hwDeviceExtension->FrameBufferLength = 0x00080000;
+        hwDeviceExtension->Card2PhysicalRomBaseAddress = foundRomBaseAddress;
+        hwDeviceExtension->Card2PhysicalIoRegBaseAddress = foundIoRegBaseAddress;
+        hwDeviceExtension->Card2PhysicalVideoMemoryAddress = foundVideoMemoryAddress;
+        hwDeviceExtension->Card2PhysicalVideoMemoryLength = foundVideoMemoryLength;
+        hwDeviceExtension->Card2PhysicalCoProcessorAddress = foundCoProcessorAddress;
+        hwDeviceExtension->Card2IoRegBaseAddress = foundIoRegBaseAddressMapped;
+        hwDeviceExtension->Card2A0000MemoryAddress = foundA0000MemoryAddress;
+        hwDeviceExtension->Card2FrameBufferLength = foundFrameBufferLength;
+        hwDeviceExtension->Card2BoardType = foundBoardType;
 
+        hwDeviceExtension->NumCards = 2;
+
+        //
+        // We now have two cards merged into this one device. Do not ask
+        // to be called again - a third physical adapter, if present, is
+        // intentionally left unused.
+        //
+
+        *Again = 0;
+
+        VideoDebugPrint((1, "Xga: second card merged for extended desktop - BoardType=0x%x\n",
+                         foundBoardType));
     }
-
-    //
-    // Now try the same at another video memory location between 1 and 2 MEG.
-    //
-
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | APP_INDEX_REG), 0x1C);
-
-    if (*videoMemory == testValue) {
-
-        testValue >>= 1;
-
-    }
-
-    *videoMemory = testValue;
-
-    if (*videoMemory == testValue) {
-
-        hwDeviceExtension->FrameBufferLength = 0x00200000;
-
-    }
-
-    VideoDebugPrint((2, "XgaFindAdapter\n  The amount of memory on the card is %d K\n",
-                   hwDeviceExtension->FrameBufferLength >> 10));
 
     //
     // Record this adapter's board type and detected memory size in the
     // system-wide inventory, so XgaInitialize() can later compute the
-    // modes common to every adapter present in the machine.
+    // modes common to every adapter present in the machine. This is done
+    // for both the first and second card.
     //
 
     if (XgaAdapterInventoryCount < XGA_MAX_ADAPTERS) {
 
-        XgaAdapterInventory[XgaAdapterInventoryCount].BoardType =
-            hwDeviceExtension->BoardType;
-        XgaAdapterInventory[XgaAdapterInventoryCount].FrameBufferLength =
-            hwDeviceExtension->FrameBufferLength;
+        XgaAdapterInventory[XgaAdapterInventoryCount].BoardType = foundBoardType;
+        XgaAdapterInventory[XgaAdapterInventoryCount].FrameBufferLength = foundFrameBufferLength;
 
         XgaAdapterInventoryCount++;
 
@@ -692,11 +937,13 @@ Return Value:
 
         VideoDebugPrint((0, "Xga: adapter inventory full - more than %d XGA adapters found\n",
                          XGA_MAX_ADAPTERS));
-
     }
 
     //
     // Everything is successful. Put some information in the registry.
+    // (For the merged dual-card case, this currently still reflects only
+    // the primary/first card - that is sufficient for Stage 0, since the
+    // registry ChipType string is purely informational.)
     //
 
     {
@@ -875,6 +1122,12 @@ Routine Description:
     the modes offered on a more capable XGA-2 card installed alongside it,
     matching the behavior of IBM's MXGA driver for OS/2.
 
+    Note: when two cards have been merged into this device extension
+    (hwDeviceExtension->NumCards == 2), the mode list computed here still
+    represents what BOTH merged cards can run identically, since the
+    inventory-based lowest-common-denominator computation below already
+    accounts for every adapter in the system, including both merged ones.
+
 Arguments:
 
     HwDeviceExtension - Supplies a pointer to the miniport's device extension.
@@ -894,6 +1147,7 @@ Return Value:
     ULONG modeBytes;
     ULONG systemMinFrameBufferLength;
     UCHAR systemBoardTypeMask;
+    ULONG thisDeviceMinFrameBufferLength;
 
     //
     // hwDeviceExtension->FrameBufferLength contains the amount of memory
@@ -965,9 +1219,28 @@ Return Value:
     // smallest VRAM size and must have a register table for every board
     // type present in order to be usable on all adapters simultaneously.
     //
+    // thisDeviceMinFrameBufferLength additionally accounts for a SECOND
+    // card merged into THIS SAME device extension (if any) - since both
+    // merged cards must run the identical mode (they present one extended
+    // desktop), a mode must fit in whichever of the two merged cards has
+    // less VRAM, not just the first one.
+    //
 
-    systemMinFrameBufferLength = hwDeviceExtension->FrameBufferLength;
+    thisDeviceMinFrameBufferLength = hwDeviceExtension->FrameBufferLength;
+
+    if ( (hwDeviceExtension->NumCards == 2) &&
+         (hwDeviceExtension->Card2FrameBufferLength < thisDeviceMinFrameBufferLength) ) {
+
+        thisDeviceMinFrameBufferLength = hwDeviceExtension->Card2FrameBufferLength;
+    }
+
+    systemMinFrameBufferLength = thisDeviceMinFrameBufferLength;
     systemBoardTypeMask = hwDeviceExtension->BoardType;
+
+    if (hwDeviceExtension->NumCards == 2) {
+
+        systemBoardTypeMask |= hwDeviceExtension->Card2BoardType;
+    }
 
     for (j = 0; j < XgaAdapterInventoryCount; j++) {
 
@@ -981,13 +1254,14 @@ Return Value:
 
     }
 
-    VideoDebugPrint((1, "XgaInitialize: system-wide min VRAM = %d K, board type mask = 0x%x\n",
-                     systemMinFrameBufferLength >> 10, systemBoardTypeMask));
+    VideoDebugPrint((1, "XgaInitialize: system-wide min VRAM = %d K, board type mask = 0x%x, NumCards on this device = %d\n",
+                     systemMinFrameBufferLength >> 10, systemBoardTypeMask, hwDeviceExtension->NumCards));
 
     //
     // Now compute the number of available modes based on the information
     // we found out - constrained to what every adapter in the system can
-    // support, not just this one.
+    // support (including a second card merged into this same device, if
+    // any), not just the primary card on this device.
     //
 
     hwDeviceExtension->NumAvailableModes = 0;
@@ -1000,15 +1274,17 @@ Return Value:
                     XgaModes[i].modeInformation.VisScreenHeight;
 
         //
-        // The mode must fit in both this adapter's own memory and the
-        // smallest memory size found anywhere in the system.
+        // The mode must fit in this device's own memory (the smaller of
+        // its one or two merged cards' VRAM) and in the smallest memory
+        // size found anywhere in the system.
         //
 
-        if ( (modeBytes <= hwDeviceExtension->FrameBufferLength) &&
+        if ( (modeBytes <= thisDeviceMinFrameBufferLength) &&
              (modeBytes <= systemMinFrameBufferLength) ) {
 
             //
-            // Check that this adapter itself can run the mode ...
+            // Check that this device's card(s) can themselves run the
+            // mode ...
             //
 
             if ( (XgaModes[i].Xga1Mode &&
@@ -1153,6 +1429,12 @@ Return Value:
     PHYSICAL_ADDRESS physicalAddress;
     ULONG offset;
 
+    ULONG requestedCardIndex;
+    PHYSICAL_ADDRESS cardVideoMemoryAddress;
+    ULONG cardVideoMemoryLength;
+    PHYSICAL_ADDRESS cardCoProcessorAddress;
+    ULONG cardIoRegBaseAddressPhysical;
+
 
     //
     // Switch on the IoContolCode in the RequestPacket. It indicates which
@@ -1172,6 +1454,41 @@ Return Value:
              (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY)) ) {
 
             status = ERROR_INSUFFICIENT_BUFFER;
+            break;
+        }
+
+        //
+        // Determine which card's video memory is being requested. For
+        // backward compatibility, if the caller's input buffer is only
+        // large enough for the (older, card-agnostic) VIDEO_MEMORY
+        // structure with nothing extra appended, we default to card 0 -
+        // this is exactly what the original single-card xgadll does.
+        //
+
+        requestedCardIndex = 0;
+
+        if ( (hwDeviceExtension->NumCards == 2) &&
+             (RequestPacket->InputBufferLength >=
+                 (sizeof(VIDEO_MEMORY) + sizeof(VIDEO_XGA_CARD_REQUEST))) ) {
+
+            requestedCardIndex = ((PVIDEO_XGA_CARD_REQUEST)
+                ((PUCHAR)RequestPacket->InputBuffer + sizeof(VIDEO_MEMORY)))->CardIndex;
+
+            if (requestedCardIndex > 1) {
+
+                requestedCardIndex = 0;
+            }
+        }
+
+        if ( (requestedCardIndex == 1) && (hwDeviceExtension->NumCards == 2) ) {
+
+            cardVideoMemoryAddress = hwDeviceExtension->Card2PhysicalVideoMemoryAddress;
+            cardVideoMemoryLength  = hwDeviceExtension->Card2PhysicalVideoMemoryLength;
+
+        } else {
+
+            cardVideoMemoryAddress = hwDeviceExtension->PhysicalVideoMemoryAddress;
+            cardVideoMemoryLength  = hwDeviceExtension->PhysicalVideoMemoryLength;
         }
 
         memoryInformation = RequestPacket->OutputBuffer;
@@ -1179,13 +1496,12 @@ Return Value:
         memoryInformation->VideoRamBase = ((PVIDEO_MEMORY)
                 (RequestPacket->InputBuffer))->RequestedVirtualAddress;
 
-        memoryInformation->VideoRamLength =
-                hwDeviceExtension->PhysicalVideoMemoryLength;
+        memoryInformation->VideoRamLength = cardVideoMemoryLength;
 
         inIoSpace = 0;
 
         status = VideoPortMapMemory(hwDeviceExtension,
-                                    hwDeviceExtension->PhysicalVideoMemoryAddress,
+                                    cardVideoMemoryAddress,
                                     &(memoryInformation->VideoRamLength),
                                     &inIoSpace,
                                     &(memoryInformation->VideoRamBase));
@@ -1202,9 +1518,10 @@ Return Value:
             XgaModes[hwDeviceExtension->CurrentMode].modeInformation.VisScreenHeight *
             XgaModes[hwDeviceExtension->CurrentMode].modeInformation.ScreenStride;
 
-        VideoDebugPrint((3, "Xga IOCLT_MAP_MEMORY\n physical = %x\n \
+        VideoDebugPrint((3, "Xga IOCLT_MAP_MEMORY (card %d)\n physical = %x\n \
 virtual = %x\n length = %x\n framebase = %x\n frameLength = %x\n",
-                           hwDeviceExtension->PhysicalVideoMemoryAddress.LowPart,
+                           requestedCardIndex,
+                           cardVideoMemoryAddress.LowPart,
                            memoryInformation->VideoRamBase,
                            memoryInformation->VideoRamLength,
                            memoryInformation->FrameBufferBase,
@@ -1220,6 +1537,7 @@ virtual = %x\n length = %x\n framebase = %x\n frameLength = %x\n",
         if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY)) {
 
             status = ERROR_INSUFFICIENT_BUFFER;
+            break;
         }
 
         status = VideoPortUnmapMemory(hwDeviceExtension,
@@ -1370,15 +1688,48 @@ virtual = %x\n length = %x\n framebase = %x\n frameLength = %x\n",
 
         }
 
+        //
+        // Determine which card's coprocessor is being requested. Default
+        // to card 0 if no (or too small an) input buffer is supplied -
+        // this preserves exact backward compatibility with the original
+        // single-card xgadll, which never supplies an input buffer here.
+        //
+
+        requestedCardIndex = 0;
+
+        if ( (hwDeviceExtension->NumCards == 2) &&
+             (RequestPacket->InputBufferLength >= sizeof(VIDEO_XGA_CARD_REQUEST)) ) {
+
+            requestedCardIndex =
+                ((PVIDEO_XGA_CARD_REQUEST)RequestPacket->InputBuffer)->CardIndex;
+
+            if (requestedCardIndex > 1) {
+
+                requestedCardIndex = 0;
+            }
+        }
+
+        if ( (requestedCardIndex == 1) && (hwDeviceExtension->NumCards == 2) ) {
+
+            cardCoProcessorAddress = hwDeviceExtension->Card2PhysicalCoProcessorAddress;
+            cardVideoMemoryAddress = hwDeviceExtension->Card2PhysicalVideoMemoryAddress;
+            cardIoRegBaseAddressPhysical = hwDeviceExtension->Card2PhysicalIoRegBaseAddress.LowPart;
+
+        } else {
+
+            cardCoProcessorAddress = hwDeviceExtension->PhysicalCoProcessorAddress;
+            cardVideoMemoryAddress = hwDeviceExtension->PhysicalVideoMemoryAddress;
+            cardIoRegBaseAddressPhysical = hwDeviceExtension->PhysicalIoRegBaseAddress.LowPart;
+        }
+
         length = XGA_CO_PROCESSOR_REGS_SIZE;
 
         // Map in at the page ganularity, then add in the page offset
         // to the linear address.
 
-        offset = hwDeviceExtension->PhysicalCoProcessorAddress.LowPart & 0x00000FFF;
+        offset = cardCoProcessorAddress.LowPart & 0x00000FFF;
 
-        physicalAddress.LowPart =
-            hwDeviceExtension->PhysicalCoProcessorAddress.LowPart & 0xFFFFF000;
+        physicalAddress.LowPart = cardCoProcessorAddress.LowPart & 0xFFFFF000;
 
         physicalAddress.HighPart = 0x00000000;
 
@@ -1405,7 +1756,7 @@ virtual = %x\n length = %x\n framebase = %x\n frameLength = %x\n",
 
         (ULONG) ((PVIDEO_XGA_COPROCESSOR_INFORMATION)
             RequestPacket->OutputBuffer)->PhysicalVideoMemoryAddress =
-                hwDeviceExtension->PhysicalVideoMemoryAddress.LowPart;
+                cardVideoMemoryAddress.LowPart;
 
         //
         // Also return the XGA IO Register Base Address.
@@ -1413,14 +1764,15 @@ virtual = %x\n length = %x\n framebase = %x\n frameLength = %x\n",
 
         (ULONG) ((PVIDEO_XGA_COPROCESSOR_INFORMATION)
             RequestPacket->OutputBuffer)->XgaIoRegisterBaseAddress =
-                hwDeviceExtension->PhysicalIoRegBaseAddress.LowPart;
+                cardIoRegBaseAddressPhysical;
 
 
-        VideoDebugPrint((3, "Xga IOCLT_MAP_CO_PROCESSOR\n physicalco = %x\n virtualco = %x\n physicalmem = %x\n",
-                         hwDeviceExtension->PhysicalCoProcessorAddress.LowPart,
+        VideoDebugPrint((3, "Xga IOCLT_MAP_CO_PROCESSOR (card %d)\n physicalco = %x\n virtualco = %x\n physicalmem = %x\n",
+                         requestedCardIndex,
+                         cardCoProcessorAddress.LowPart,
                          ((PVIDEO_XGA_COPROCESSOR_INFORMATION)
                              RequestPacket->OutputBuffer)->CoProcessorVirtualAddress,
-                         hwDeviceExtension->PhysicalVideoMemoryAddress.LowPart));
+                         cardVideoMemoryAddress.LowPart));
 
         break;
 
@@ -1466,61 +1818,65 @@ virtual = %x\n length = %x\n framebase = %x\n frameLength = %x\n",
 } // end XgaStartIO()
 
 
-VP_STATUS
-XgaSetMode(
+VOID
+XgaSetModeOnCard(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
-    ULONG ModeNum
+    ULONG ModeNum,
+    UCHAR BoardType,
+    ULONG IoRegBaseAddress
     )
 
 /*++
 
 Routine Description:
 
-    This routine is the main execution routine for the miniport driver. It
-    acceptss a Video Request Packet, performs the request, and then returns
-    with the appropriate status.
+    Programs the mode-set register table for ModeNum into a single card's
+    registers, using the supplied BoardType (to select the Xga1Mode or
+    Xga2Mode table) and IoRegBaseAddress (to target either the primary
+    card or a second, merged-in card). This is the same register
+    programming sequence that was previously inlined directly in
+    XgaSetMode() for the single-card case; it is factored out here purely
+    so it can be invoked twice (once per card) when two cards have been
+    merged into one device extension.
 
 Arguments:
 
-    HwDeviceExtension - Supplies a pointer to the miniport's device extension.
+    HwDeviceExtension - Supplies a pointer to the miniport's device
+        extension (only used here to satisfy the XGAOUT macro's
+        reference to a local hwDeviceExtension - see below).
 
-    ModeNum - Index of the mode in which the adapter must be programmed.
+    ModeNum - Index of the mode in which the card must be programmed.
 
-Return Value:
+    BoardType - XGA_TYPE_1 or XGA_TYPE_2, selecting which register table
+        to use for this card.
 
-    NO_ERROR if the function completed successfully
-    ERROR_INVALID_PARAMETER if the requested mode is invalid for the device.
+    IoRegBaseAddress - I/O base address of the XGA registers for the card
+        being programmed.
 
 --*/
 
 {
-    PHW_DEVICE_EXTENSION hwDeviceExtension = HwDeviceExtension;
-    PUCHAR indexRegister = (PUCHAR) (hwDeviceExtension->IoRegBaseAddress + INDEX_REG);
+    HW_DEVICE_EXTENSION localExtension;
+    PHW_DEVICE_EXTENSION hwDeviceExtension = &localExtension;
+    PUCHAR indexRegister;
     PMODE_REGISTER_DATA_TABLE modeTable;
     UCHAR input;
 
-    VideoDebugPrint((1, "XgaSetMode: the mode being set is %d\n", ModeNum));
+    hwDeviceExtension->IoRegBaseAddress = IoRegBaseAddress;
+    indexRegister = (PUCHAR) (IoRegBaseAddress + INDEX_REG);
 
-    //
-    // Get the right mode table
-    //
-
-    if (hwDeviceExtension->BoardType & XGA_TYPE_1) {
+    if (BoardType & XGA_TYPE_1) {
 
         modeTable = XgaModes[ModeNum].Xga1Mode;
 
+    } else if (BoardType & XGA_TYPE_2) {
+
+        modeTable = XgaModes[ModeNum].Xga2Mode;
+
     } else {
 
-        if (hwDeviceExtension->BoardType & XGA_TYPE_2) {
-
-            modeTable = XgaModes[ModeNum].Xga2Mode;
-
-        } else {
-
-            VideoDebugPrint((0, "XGA: Internal mode flags are invalid"));
-            return ERROR_INVALID_PARAMETER;
-
-        }
+        VideoDebugPrint((0, "XGA: Internal mode flags are invalid (XgaSetModeOnCard)"));
+        return;
     }
 
     //
@@ -1546,7 +1902,7 @@ Return Value:
             VideoPortWritePortUchar(indexRegister,
                                     modeTable->IndexPort);
 
-            input = VideoPortReadPortUchar((PUCHAR) hwDeviceExtension->IoRegBaseAddress +
+            input = VideoPortReadPortUchar((PUCHAR) IoRegBaseAddress +
                                            DATA_IN_REG);
 
             input |= modeTable->Data;
@@ -1557,7 +1913,7 @@ Return Value:
 
         default:
 
-            VideoPortWritePortUchar((PUCHAR) hwDeviceExtension->IoRegBaseAddress +
+            VideoPortWritePortUchar((PUCHAR) IoRegBaseAddress +
                                         modeTable->Port,
                                     modeTable->Data);
 
@@ -1565,6 +1921,93 @@ Return Value:
 
         modeTable++;
 
+    }
+
+} // end XgaSetModeOnCard()
+
+
+VP_STATUS
+XgaSetMode(
+    PHW_DEVICE_EXTENSION HwDeviceExtension,
+    ULONG ModeNum
+    )
+
+/*++
+
+Routine Description:
+
+    This routine is the main execution routine for the miniport driver. It
+    acceptss a Video Request Packet, performs the request, and then returns
+    with the appropriate status.
+
+    Dual-card support: if two cards have been merged into this device
+    extension (HwDeviceExtension->NumCards == 2), BOTH cards are
+    programmed into the SAME mode here, one after the other, via
+    XgaSetModeOnCard(). Since XgaInitialize()'s mode-validity computation
+    already guarantees that any mode marked Valid[] for this device is
+    runnable identically on both merged cards (same resolution/depth),
+    this keeps both monitors synchronized to one consistent mode - which
+    is required for the extended-desktop image built by xgadll to line up
+    correctly across the seam between the two cards.
+
+Arguments:
+
+    HwDeviceExtension - Supplies a pointer to the miniport's device extension.
+
+    ModeNum - Index of the mode in which the adapter must be programmed.
+
+Return Value:
+
+    NO_ERROR if the function completed successfully
+    ERROR_INVALID_PARAMETER if the requested mode is invalid for the device.
+
+--*/
+
+{
+    PHW_DEVICE_EXTENSION hwDeviceExtension = HwDeviceExtension;
+
+    VideoDebugPrint((1, "XgaSetMode: the mode being set is %d\n", ModeNum));
+
+    //
+    // Validate that this device's own board type has a register table
+    // for this mode before doing anything - matches the original
+    // single-card behavior, which failed the call in this situation.
+    //
+
+    if ( !( ((hwDeviceExtension->BoardType & XGA_TYPE_1) && XgaModes[ModeNum].Xga1Mode) ||
+            ((hwDeviceExtension->BoardType & XGA_TYPE_2) && XgaModes[ModeNum].Xga2Mode) ) ) {
+
+        VideoDebugPrint((0, "XGA: Internal mode flags are invalid"));
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    //
+    // Program the primary card.
+    //
+
+    XgaSetModeOnCard(hwDeviceExtension,
+                     ModeNum,
+                     hwDeviceExtension->BoardType,
+                     hwDeviceExtension->IoRegBaseAddress);
+
+    //
+    // If a second card has been merged into this device, program it into
+    // the identical mode as well.
+    //
+
+    if (hwDeviceExtension->NumCards == 2) {
+
+        if ( !( ((hwDeviceExtension->Card2BoardType & XGA_TYPE_1) && XgaModes[ModeNum].Xga1Mode) ||
+                ((hwDeviceExtension->Card2BoardType & XGA_TYPE_2) && XgaModes[ModeNum].Xga2Mode) ) ) {
+
+            VideoDebugPrint((0, "XGA: Internal mode flags are invalid (card 2)"));
+            return ERROR_INVALID_PARAMETER;
+        }
+
+        XgaSetModeOnCard(hwDeviceExtension,
+                         ModeNum,
+                         hwDeviceExtension->Card2BoardType,
+                         hwDeviceExtension->Card2IoRegBaseAddress);
     }
 
     //
@@ -1723,36 +2166,42 @@ INDEX_REGISTER_DATA_TABLE XgaResetToVga[] = {
     {0xFF, 0x00}
 };
 
-BOOLEAN
-XgaResetHW(
-    IN PVOID HwDeviceExtension,
-    IN ULONG Columns,
-    IN ULONG Rows
+VOID
+XgaResetHWCard(
+    PHW_DEVICE_EXTENSION HwDeviceExtension,
+    ULONG IoRegBaseAddress,
+    PVOID PassThroughPort
     )
 
 /*++
 
-routine description:
+Routine Description:
 
-    This function is called to reset the XGA extended registers back to
-    VGA so we can do an int 10 back to VGA mode.
+    Resets a single card's XGA extended registers back to VGA. This is the
+    same register programming sequence previously inlined directly in
+    XgaResetHW() for the single-card case, factored out so it can be
+    invoked once per merged card.
 
 Arguments:
 
-    hwdeviceextension - pointer to the miniport driver's device extension.
-    Columns - Number of columns for text mode (not used).
-    Rows - Number of rows for text mode (not used).
+    HwDeviceExtension - Supplies a pointer to the miniport's device
+        extension (only used here to satisfy the XGAOUT macro's
+        reference to a local hwDeviceExtension - see below).
 
-Return value:
+    IoRegBaseAddress - I/O base address of the XGA registers for the card
+        being reset.
 
-    Always returns FALSE so that the Video Port driver will call Int 10 to
-    set the desired video mode.
+    PassThroughPort - VGA pass-through port address (shared by both
+        cards).
 
 --*/
 
 {
-    PHW_DEVICE_EXTENSION hwDeviceExtension = HwDeviceExtension;
+    HW_DEVICE_EXTENSION localExtension;
+    PHW_DEVICE_EXTENSION hwDeviceExtension = &localExtension;
     USHORT i;
+
+    hwDeviceExtension->IoRegBaseAddress = IoRegBaseAddress;
 
     XGAOUT(APP_CTL_REG, 0x00);
 
@@ -1771,7 +2220,55 @@ Return value:
 
     XGAOUT(OP_MODE_REG, 0x1);
 
-    VideoPortWritePortUchar(hwDeviceExtension->PassThroughPort, 0x01);
+    VideoPortWritePortUchar(PassThroughPort, 0x01);
+
+} // end XgaResetHWCard()
+
+
+BOOLEAN
+XgaResetHW(
+    IN PVOID HwDeviceExtension,
+    IN ULONG Columns,
+    IN ULONG Rows
+    )
+
+/*++
+
+routine description:
+
+    This function is called to reset the XGA extended registers back to
+    VGA so we can do an int 10 back to VGA mode.
+
+    Dual-card support: if a second card has been merged into this device
+    extension, it is reset immediately after the primary card, using the
+    same (shared) VGA pass-through port.
+
+Arguments:
+
+    hwdeviceextension - pointer to the miniport driver's device extension.
+    Columns - Number of columns for text mode (not used).
+    Rows - Number of rows for text mode (not used).
+
+Return value:
+
+    Always returns FALSE so that the Video Port driver will call Int 10 to
+    set the desired video mode.
+
+--*/
+
+{
+    PHW_DEVICE_EXTENSION hwDeviceExtension = HwDeviceExtension;
+
+    XgaResetHWCard(hwDeviceExtension,
+                   hwDeviceExtension->IoRegBaseAddress,
+                   hwDeviceExtension->PassThroughPort);
+
+    if (hwDeviceExtension->NumCards == 2) {
+
+        XgaResetHWCard(hwDeviceExtension,
+                       hwDeviceExtension->Card2IoRegBaseAddress,
+                       hwDeviceExtension->PassThroughPort);
+    }
 
     return FALSE;
 }

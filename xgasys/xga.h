@@ -15,6 +15,20 @@ Abstract:
     MCA-only build: ISA/EISA (POS-emulation / banked framebuffer) support
     has been removed. Genuine Micro Channel XGA/XGA-2 adapters only.
 
+    Dual-card (side by side extended desktop) support: when exactly two
+    MCA XGA/XGA-2 adapters are present in the system, XgaFindAdapter merges
+    both of them into a SINGLE logical device (one HW_DEVICE_EXTENSION,
+    one \Device\VideoN instance) instead of registering two independent
+    devices. This is required because the NT4 GDI/DDI model only ever
+    binds ONE display driver instance to ONE miniport device - there is no
+    way for xgadll to be handed a second miniport handle by the OS. All of
+    the second card's physical resources (I/O base, coprocessor, VRAM,
+    POS data) are therefore tracked alongside the first card's resources
+    in this same device extension, under the "Card2" prefixed fields
+    below. If only one adapter is found, NumCards stays 1 and every
+    Card2-prefixed field is simply unused - single card behavior is
+    unchanged.
+
 Environment:
 
     Kernel mode
@@ -150,6 +164,12 @@ extern PULONG ApertureIndexRegister;
 // modes offered on a more capable XGA-2 add-in card, matching the
 // behavior of IBM's MXGA driver for OS/2.
 //
+// NOTE: as of the dual-card (extended desktop) support, this inventory is
+// still populated exactly as before and is still used the same way by
+// XgaInitialize() for its system-wide lowest-common-denominator mode
+// computation. It is independent of (and still fully compatible with)
+// the Card2 merge logic described below.
+//
 
 #define XGA_MAX_ADAPTERS 8
 
@@ -185,5 +205,35 @@ typedef struct _HW_DEVICE_EXTENSION {
     PVOID PassThroughPort;
 
     UCHAR Valid[XGA_MAX_MODES];
+
+    //
+    // Dual-card (extended desktop) support.
+    //
+    // NumCards is 1 for a normal single-adapter system (all of the
+    // Card2-prefixed fields below are then unused/zero). It becomes 2
+    // only when XgaFindAdapter has located exactly two MCA XGA/XGA-2
+    // adapters in the system and merged them into this single device
+    // extension so they can be presented to xgadll as one extended
+    // desktop (card 0 = left/primary monitor, card 1 = right/secondary
+    // monitor). All resources for the second card are tracked
+    // independently from the first card's (already existing, unrenamed)
+    // fields above, so single-card code paths are entirely unaffected.
+    //
+
+    ULONG NumCards;
+
+    PHYSICAL_ADDRESS Card2PhysicalRomBaseAddress;
+    PHYSICAL_ADDRESS Card2PhysicalCoProcessorAddress;
+    PHYSICAL_ADDRESS Card2PhysicalVideoMemoryAddress;
+    PHYSICAL_ADDRESS Card2PhysicalIoRegBaseAddress;
+
+    UCHAR Card2BoardType;
+
+    ULONG Card2IoRegBaseAddress;
+
+    ULONG Card2FrameBufferLength;
+    ULONG Card2PhysicalVideoMemoryLength;
+
+    PVOID Card2A0000MemoryAddress;
 
 } HW_DEVICE_EXTENSION, *PHW_DEVICE_EXTENSION;
