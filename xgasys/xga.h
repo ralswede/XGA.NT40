@@ -1,3 +1,4 @@
+
 /*++
 
 Copyright (c) 1991-1992  Microsoft Corporation
@@ -10,6 +11,9 @@ Abstract:
 
     This module contains the global structures and definitions used
     by the xga driver.
+
+    MCA-only build: ISA/EISA (POS-emulation / banked framebuffer) support
+    has been removed. Genuine Micro Channel XGA/XGA-2 adapters only.
 
 Environment:
 
@@ -82,19 +86,6 @@ Revision History:
   VideoPortWritePortUshort((PUSHORT)(hwDeviceExtension->IoRegBaseAddress+reg), (USHORT)((val << 8) + index))
 
 //
-// Pos Register defines for ISA support
-//
-
-#define BOARD_SETUP_PORT    0x0094
-#define POS_SELECT_PORT     0x0096
-#define POS_DATA_BASE       0x0100
-
-#define POS_SELECT_ON       0x08
-#define POS_SELECT_OFF      0x00
-#define POS_MAX_SLOTS       0x08
-
-
-//
 // Mode set tables
 //
 
@@ -127,15 +118,13 @@ typedef struct _INDEX_REGISTER_DATA_TABLE {
     UCHAR Data;
 } INDEX_REGISTER_DATA_TABLE, *PINDEX_REGISTER_DATA_TABLE;
 
-
+
 //
 // externs
 //
 
 extern ULONG XgaSlot;
 extern LONG BusNumber;
-
-extern BOOLEAN framebufMode;
 
 extern XGA_VIDEO_MODE XgaModes[];
 
@@ -150,7 +139,28 @@ extern UCHAR BankSwitchStart;
 extern UCHAR BankSwitchEnd;
 extern PULONG ApertureIndexRegister;
 
-
+//
+// Inventory of every XGA/XGA-2 adapter discovered in the system during
+// VideoPortInitialize()'s enumeration pass (XgaFindAdapter is called once
+// per MCA slot that holds a recognized adapter, via *Again). We record
+// each one's board type and detected VRAM size here so that, once all
+// adapters have been found, XgaInitialize() can compute the set of modes
+// that *every* adapter in the system is capable of - i.e. the weakest
+// adapter (for example an onboard 512K XGA-1 on a model 8590) limits the
+// modes offered on a more capable XGA-2 add-in card, matching the
+// behavior of IBM's MXGA driver for OS/2.
+//
+
+#define XGA_MAX_ADAPTERS 8
+
+typedef struct _XGA_ADAPTER_INVENTORY_ENTRY {
+    UCHAR BoardType;
+    ULONG FrameBufferLength;
+} XGA_ADAPTER_INVENTORY_ENTRY, *PXGA_ADAPTER_INVENTORY_ENTRY;
+
+extern XGA_ADAPTER_INVENTORY_ENTRY XgaAdapterInventory[XGA_MAX_ADAPTERS];
+extern ULONG XgaAdapterInventoryCount;
+
 //
 // the device's private Device Extension
 //

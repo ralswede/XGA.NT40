@@ -1,3 +1,4 @@
+
 /*++
 
 Copyright (c) 1991-1992  Microsoft Corporation
@@ -51,12 +52,8 @@ Revision History:
 ULONG XgaSlot = 0;
 LONG BusNumber = -1;
 
-//
-// This variable determines if we are going to run the XGA with the
-// coprocessor (FALSE) or jsut as a banked frame buffer (TRUE);
-//
-
-BOOLEAN framebufMode = FALSE;
+XGA_ADAPTER_INVENTORY_ENTRY XgaAdapterInventory[XGA_MAX_ADAPTERS] = {0};
+ULONG XgaAdapterInventoryCount = 0;
 
 //
 // Mode set tables

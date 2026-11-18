@@ -10,6 +10,18 @@ Abstract:
 
     This module contains the code that implements the XGA miniport driver.
 
+    MCA-only build: ISA/EISA (POS-emulation / banked framebuffer) support
+    has been removed. This driver targets genuine IBM Micro Channel
+    XGA / XGA-2 adapters only, and allows multiple MCA XGA adapters -
+    including mixed XGA-1/XGA-2 configurations (e.g. an onboard 512K
+    XGA-1 plus an add-in XGA-2 card, as found on a model 8590) - to be
+    enumerated and bound as separate device instances. Each adapter's
+    board type and installed VRAM size is recorded in a system-wide
+    inventory as it is discovered, so that the set of modes offered on
+    every adapter in the machine is constrained to what the weakest
+    adapter present can also support, matching the behavior of IBM's
+    MXGA driver for OS/2.
+
 Environment:
 
     Kernel mode
@@ -29,7 +41,7 @@ Revision History:
 
 #include "xgaloger.h"
 
-
+
 //
 // Function Prototypes
 //
@@ -81,18 +93,6 @@ XgaGetPosData(
     );
 
 VP_STATUS
-XgaGetIsaData(
-    PHW_DEVICE_EXTENSION HwDeviceExtension,
-    PCM_MCA_POS_DATA PosData
-    );
-
-ULONG
-XgaFindXga(
-    PHW_DEVICE_EXTENSION HwDeviceExtension,
-    PCM_MCA_POS_DATA PosData
-    );
-
-VP_STATUS
 XgaSetMode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     ULONG ModeNum
@@ -121,8 +121,6 @@ XgaGetRegistryParamaterCallback(
 #pragma alloc_text(PAGE,XgaInitialize)
 #pragma alloc_text(PAGE,XgaStartIO)
 #pragma alloc_text(PAGE,XgaGetPosData)
-#pragma alloc_text(PAGE,XgaGetIsaData)
-#pragma alloc_text(PAGE,XgaFindXga)
 #pragma alloc_text(PAGE,XgaSetMode)
 #pragma alloc_text(PAGE,XgaGetBankSelectCode)
 #pragma alloc_text(PAGE,XgaGetRegistryParamaterCallback)
@@ -130,7 +128,7 @@ XgaGetRegistryParamaterCallback(
 
 // XgaResetHW is not pageable
 
-
+
 ULONG
 DriverEntry (
     PVOID Context1,
@@ -161,7 +159,6 @@ Return Value:
 {
 
     VIDEO_HW_INITIALIZATION_DATA hwInitData;
-    ULONG status;
     ULONG initializationStatus;
 
     PAGED_CODE();
@@ -201,43 +198,24 @@ Return Value:
 //    hwInitData.StartingDeviceNumber = 0;
 
     //
-    // This device only supports the internal bus type. So return the status
-    // value directly to the operating system.
+    // This driver supports Micro Channel XGA/XGA-2 adapters only. Each
+    // MCA slot that reports a valid XGA adapter ID will result in
+    // XgaFindAdapter() being called again (via *Again), allowing more
+    // than one physical card - including mixed XGA-1/XGA-2
+    // configurations - to be bound as separate \Device\VideoN instances.
     //
 
-    hwInitData.AdapterInterfaceType = Isa;
+    hwInitData.AdapterInterfaceType = MicroChannel;
 
     initializationStatus = VideoPortInitialize(Context1,
                                                Context2,
                                                &hwInitData,
                                                (PVOID)hwInitData.AdapterInterfaceType);
 
-    hwInitData.AdapterInterfaceType = Eisa;
-
-    status = VideoPortInitialize(Context1,
-                                 Context2,
-                                 &hwInitData,
-                                 (PVOID)hwInitData.AdapterInterfaceType);
-
-    if (initializationStatus > status) {
-        initializationStatus = status;
-    }
-
-    hwInitData.AdapterInterfaceType = MicroChannel;
-
-    status = VideoPortInitialize(Context1,
-                                 Context2,
-                                 &hwInitData,
-                                 (PVOID)hwInitData.AdapterInterfaceType);
-
-    if (initializationStatus > status) {
-        initializationStatus = status;
-    }
-
     return initializationStatus;
 
 } // end DriverEntry()
-
+
 VP_STATUS
 XgaFindAdapter(
     PVOID HwDeviceExtension,
@@ -255,6 +233,18 @@ Routine Description:
     is present in the system.
     If it is present, the function fills out some information describing
     the adapter.
+
+    This build only recognizes Micro Channel (MCA) XGA/XGA-2 adapters.
+    Multiple adapters can be enumerated across successive calls (indicated
+    via *Again), one \Device\VideoN instance per physical MCA slot found.
+
+    As each adapter is found, its true installed VRAM size is probed and
+    recorded (along with its board type) in the system-wide
+    XgaAdapterInventory[] table. XgaInitialize() later uses this inventory
+    to compute the set of video modes common to every adapter present in
+    the machine, so that mixed configurations (e.g. an onboard 512K XGA-1
+    plus an add-in XGA-2 card) only ever offer modes the weakest adapter
+    can also run - matching the behavior of IBM's MXGA driver for OS/2.
 
 Arguments:
 
@@ -309,6 +299,8 @@ Return Value:
     VIDEO_ACCESS_RANGE accessRange[NUM_XGA_ACCESS_RANGES];
     PHYSICAL_ADDRESS A0000PhysicalAddress;
     PHYSICAL_ADDRESS passThroughPort;
+    volatile PUCHAR videoMemory;
+    UCHAR testValue;
 
     A0000PhysicalAddress.LowPart = 0x000A0000;
     A0000PhysicalAddress.HighPart = 0x00000000;
@@ -334,6 +326,16 @@ Return Value:
     }
 
     //
+    // This driver only supports Micro Channel XGA/XGA-2 adapters.
+    //
+
+    if ((ULONG)HwContext != MicroChannel) {
+
+        return ERROR_DEV_NOT_EXIST;
+
+    }
+
+    //
     // Reset the Slot number being examined to zero if we are processing
     // a new bus number.
     //
@@ -346,59 +348,28 @@ Return Value:
     }
 
     //
-    // On the Microchanel machine, we can use the POS information, which is
-    // really nice.
-    // However, on ISA/EISA, we have to call the equivalent of the POS
-    // registers (same addresses) and the card will fake it and return the
-    // configuration information
+    // Use the POS information from the bus to identify an XGA/XGA-2
+    // adapter in the current slot.
     //
 
-    if ((ULONG)HwContext == MicroChannel) {
+    if (NO_ERROR != VideoPortGetDeviceData(hwDeviceExtension,
+                                           VpBusData,
+                                           XgaGetPosData,
+                                           &posData)) {
 
-        //
-        // This picks up the POS registers.
-        //
+        VideoDebugPrint((2, "Xga: GetDeviceData returned error - probably no XGAs\n"));
 
-        if (NO_ERROR != VideoPortGetDeviceData(hwDeviceExtension,
-                                               VpBusData,
-                                               XgaGetPosData,
-                                               &posData)) {
-
-            VideoDebugPrint((2, "Xga: GetDeviceData returned error - probably no XGAs\n"));
-
-            return ERROR_DEV_NOT_EXIST;
-        }
-
-        //
-        // Since we got the data properly, make sure we get called again to find
-        // the next XGA adapter.
-        //
-        // Only Microchannels have the possibility of multiple XGAs ?
-        //
-
-        *Again = 1;
-
-    } else {
-
-        //
-        // on non-microchannel, we have to run as a banked frame buffer
-        //
-
-        framebufMode = TRUE;
-
-        //
-        // Get fake POS info
-        //
-
-        if (NO_ERROR != XgaGetIsaData(hwDeviceExtension,
-                                      &posData)) {
-
-            VideoDebugPrint((2, "Xga: GetIsaData returned error - probably no XGAs\n"));
-
-            return ERROR_DEV_NOT_EXIST;
-
-        }
+        return ERROR_DEV_NOT_EXIST;
     }
+
+    //
+    // Since we got the data properly, make sure we get called again to find
+    // the next XGA adapter in a subsequent MCA slot. This is what allows a
+    // second (or further) physical card - of either board type - to be
+    // bound as its own device instance.
+    //
+
+    *Again = 1;
 
     //
     // Determine the XGA registers by munging the POS register data.
@@ -449,33 +420,16 @@ Return Value:
     }
 
     //
-    // If none of these apertures are open, (64K aperture) then fail.
-    // 1 MEG aperture is disabled if the base is 0
+    // If none of these apertures are open, fail. On genuine MCA XGA/XGA-2
+    // hardware a 1MEG or 4MEG linear aperture is always expected; there is
+    // no ISA-style 64K banked fallback in this build.
     //
 
     if (!hwDeviceExtension->PhysicalVideoMemoryAddress.LowPart) {
 
-        VideoDebugPrint((1, "Xga: 64K aperture\n"));
+        VideoDebugPrint((1, "Xga: no linear aperture available - failing\n"));
 
-//        VideoPortLogError(hwDeviceExtension,
-//                          NULL,
-//                          XGA_WRONG_APERTURE,
-//                          __LINE__);
-//
-//        return ERROR_INVALID_PARAMETER;
-
-        //
-        // We now support the XGA with the 64K aperture by running it with the
-        // vga256.dll
-        //
-
-        framebufMode = TRUE;
-
-        hwDeviceExtension->FrameBufferLength = 0x00100000;
-        hwDeviceExtension->PhysicalVideoMemoryLength = 0x00010000;
-
-        hwDeviceExtension->PhysicalVideoMemoryAddress.HighPart = 0x00000000;
-        hwDeviceExtension->PhysicalVideoMemoryAddress.LowPart = 0x000A0000;
+        return ERROR_INVALID_PARAMETER;
     }
 
     //
@@ -508,7 +462,7 @@ Return Value:
     accessRange[1].RangeLength = hwDeviceExtension->PhysicalVideoMemoryLength;
     accessRange[1].RangeInIoSpace = FALSE;
     accessRange[1].RangeVisible = TRUE;
-    accessRange[1].RangeShareable = framebufMode ? TRUE : FALSE;
+    accessRange[1].RangeShareable = FALSE;
 
     //
     // ROM Location
@@ -633,6 +587,115 @@ Return Value:
     }
 
     //
+    // Probe the card for its true installed VRAM size. This must happen
+    // here (rather than later in XgaInitialize) so that, by the time ANY
+    // adapter's XgaInitialize() runs, the full system-wide adapter
+    // inventory - including every other adapter's memory size - is
+    // already known. This is what lets a weaker adapter (e.g. an onboard
+    // 512K XGA-1) correctly constrain the mode list offered on a more
+    // capable XGA-2 card installed alongside it.
+    //
+
+    videoMemory = hwDeviceExtension->A0000MemoryAddress;
+    testValue = 0xA5;
+
+    //
+    // Disable interrupts, blank the palette, and switch into a temporary
+    // Extended Graphics Mode so we can probe video memory through the
+    // 64K aperture at A0000.
+    //
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | INT_ENABLE_REG), 0x00);
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | INDEX_REG), 0x64);
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | DATA_IN_REG), 0x00);
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | OP_MODE_REG), 0x04);
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | APP_CTL_REG), 0x01);
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | APP_INDEX_REG), 0x0C);
+
+    //
+    // To test if memory is present, use a test value (make sure the same
+    // value is not currently stored in video memory, otherwise change it),
+    // store it in video memory, and read it back. If the value is identical
+    // to the value we stored then there must be memory present at that
+    // location (which, in this case, means we have 1 MEG of Video RAM).
+    //
+
+    if (*videoMemory == testValue) {
+
+        testValue >>= 1;
+
+    }
+
+    *videoMemory = testValue;
+
+    if (*videoMemory == testValue) {
+
+        hwDeviceExtension->FrameBufferLength = 0x00100000;
+
+    } else {
+
+        hwDeviceExtension->FrameBufferLength = 0x00080000;
+
+    }
+
+    //
+    // Now try the same at another video memory location between 1 and 2 MEG.
+    //
+
+    VideoPortWritePortUchar(
+        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | APP_INDEX_REG), 0x1C);
+
+    if (*videoMemory == testValue) {
+
+        testValue >>= 1;
+
+    }
+
+    *videoMemory = testValue;
+
+    if (*videoMemory == testValue) {
+
+        hwDeviceExtension->FrameBufferLength = 0x00200000;
+
+    }
+
+    VideoDebugPrint((2, "XgaFindAdapter\n  The amount of memory on the card is %d K\n",
+                   hwDeviceExtension->FrameBufferLength >> 10));
+
+    //
+    // Record this adapter's board type and detected memory size in the
+    // system-wide inventory, so XgaInitialize() can later compute the
+    // modes common to every adapter present in the machine.
+    //
+
+    if (XgaAdapterInventoryCount < XGA_MAX_ADAPTERS) {
+
+        XgaAdapterInventory[XgaAdapterInventoryCount].BoardType =
+            hwDeviceExtension->BoardType;
+        XgaAdapterInventory[XgaAdapterInventoryCount].FrameBufferLength =
+            hwDeviceExtension->FrameBufferLength;
+
+        XgaAdapterInventoryCount++;
+
+    } else {
+
+        VideoDebugPrint((0, "Xga: adapter inventory full - more than %d XGA adapters found\n",
+                         XGA_MAX_ADAPTERS));
+
+    }
+
+    //
     // Everything is successful. Put some information in the registry.
     //
 
@@ -673,7 +736,7 @@ Return Value:
 
 } // end XgaFindAdapter()
 
-
+
 VP_STATUS
 XgaGetPosData(
     PVOID HwDeviceExtension,
@@ -789,124 +852,8 @@ Return Value:
     return ERROR_DEV_NOT_EXIST;
 
 }
-
-VP_STATUS
-XgaGetIsaData(
-    PHW_DEVICE_EXTENSION HwDeviceExtension,
-    PCM_MCA_POS_DATA PosData
-    )
 
-/*++
 
-Routine Description:
-
-    This routine gets the XGA configuration information from an ISA system.
-
-Arguments:
-
-    HwDeviceExtension - Supplies a pointer to the miniport's device extension.
-
-    PosData - Pointer to a buffer containing the POS information for the
-        device if it was found.
-
-Return Value:
-
-    NO_ERROR if the XGA device was found.
-    ERROR_DEV_NOT_EXIST otherwise.
-
---*/
-
-{
-    VIDEO_ACCESS_RANGE accessRange[2];
-    VP_STATUS status;
-    USHORT adapterId = 0;
-    UCHAR i;
-
-    //
-    // Temporary Access ranges.
-    // These will be deleted later on since we do not really own them ...
-    //
-
-    accessRange[0].RangeStart.LowPart = POS_SELECT_PORT;
-    accessRange[0].RangeStart.HighPart = 0x0;
-    accessRange[0].RangeLength = 1;
-    accessRange[0].RangeInIoSpace = TRUE;
-    accessRange[0].RangeVisible = FALSE;
-    accessRange[0].RangeShareable = TRUE;
-
-    accessRange[1].RangeStart.LowPart = POS_DATA_BASE;
-    accessRange[1].RangeStart.HighPart = 0x0;
-    accessRange[1].RangeLength = 6;
-    accessRange[1].RangeInIoSpace = TRUE;
-    accessRange[1].RangeVisible = FALSE;
-    accessRange[1].RangeShareable = TRUE;
-
-    //
-    // Check to see if there is a hardware resource conflict.
-    //
-
-    status = VideoPortVerifyAccessRanges(HwDeviceExtension,
-                                         2,
-                                         accessRange);
-
-    if (status != NO_ERROR) {
-
-        return status;
-
-    }
-
-    //
-    // Go through the 8 slot numbers trying to find an XGA.
-    //
-
-    status = ERROR_DEV_NOT_EXIST;
-
-    for (i = 0; i < POS_MAX_SLOTS; i++) {
-
-        VideoPortWritePortUchar((PUCHAR) POS_SELECT_PORT,
-                                (UCHAR) (POS_SELECT_ON | i));
-
-        adapterId = VideoPortReadPortUchar((PUCHAR) (POS_DATA_BASE + 0));
-        adapterId |= VideoPortReadPortUchar((PUCHAR) (POS_DATA_BASE + 1)) << 8;
-
-        if (adapterId == 0x8FDB) {
-
-            HwDeviceExtension->BoardType = XGA_TYPE_1;
-            status = NO_ERROR;
-
-            break;
-
-        }
-
-        if (adapterId == 0x8FDA) {
-
-            HwDeviceExtension->BoardType = XGA_TYPE_2;
-            status = NO_ERROR;
-
-            break;
-
-        }
-
-        VideoPortWritePortUchar((PUCHAR) POS_SELECT_PORT,
-                                (UCHAR) (POS_SELECT_OFF | i));
-    }
-
-    if (status == NO_ERROR) {
-
-        PosData->AdapterId = adapterId;
-        PosData->PosData1 = VideoPortReadPortUchar((PUCHAR)(POS_DATA_BASE + 2));
-        PosData->PosData2 = VideoPortReadPortUchar((PUCHAR)(POS_DATA_BASE + 3));
-        PosData->PosData3 = VideoPortReadPortUchar((PUCHAR)(POS_DATA_BASE + 4));
-        PosData->PosData4 = VideoPortReadPortUchar((PUCHAR)(POS_DATA_BASE + 5));
-
-        VideoPortWritePortUchar((PUCHAR) POS_SELECT_PORT,
-                                (UCHAR) (POS_SELECT_OFF | i));
-    }
-
-    return status;
-}
-
-
 BOOLEAN
 XgaInitialize(
     PVOID HwDeviceExtension
@@ -917,6 +864,16 @@ XgaInitialize(
 Routine Description:
 
     This routine does one time initialization of the device.
+
+    VRAM detection has already been performed for this adapter (and every
+    other XGA/XGA-2 adapter in the system) back in XgaFindAdapter(), and
+    recorded in XgaAdapterInventory[]. This routine uses that system-wide
+    inventory to compute the set of modes valid on THIS device: a mode is
+    only marked valid if every adapter present in the machine - not just
+    this one - has enough memory for it and a register table for it. This
+    means a weaker adapter (e.g. an onboard 512K XGA-1) correctly limits
+    the modes offered on a more capable XGA-2 card installed alongside it,
+    matching the behavior of IBM's MXGA driver for OS/2.
 
 Arguments:
 
@@ -931,94 +888,12 @@ Return Value:
 
 {
     PHW_DEVICE_EXTENSION hwDeviceExtension = HwDeviceExtension;
-    volatile PUCHAR videoMemory;
-    UCHAR testValue = 0xA5;
     ULONG i;
+    ULONG j;
     ULONG color;
-
-    videoMemory = hwDeviceExtension->A0000MemoryAddress;
-
-    //
-    // Disable interrupts on the card since they will not be used
-    //
-
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | INT_ENABLE_REG), 0x00);
-
-    //
-    // Blank the palette so we get a black screen.
-    //
-
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | INDEX_REG), 0x64);
-
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | DATA_IN_REG), 0x00);
-
-    //
-    // Put the adapter in a temporary Extended Graphics Mode, set up video
-    // memory at A0000, put the aperture at 768 K higher and try to access
-    // it to determine how much memory is present.
-    //
-
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | OP_MODE_REG), 0x04);
-
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | APP_CTL_REG), 0x01);
-
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | APP_INDEX_REG), 0x0C);
-
-    //
-    // To test if memory is present, use a test value (make sure the same
-    // value is not currently stored in video memory, otherwise change it),
-    // store it in video memory, and read it back. If the value is identical
-    // to the value we stored then there must be memory present at that
-    // location (which, in this case, means we have 1 MEG of Video RAM).
-    //
-
-    if (*videoMemory == testValue) {
-
-        testValue >>= 1;
-
-    }
-
-    *videoMemory = testValue;
-
-    if (*videoMemory == testValue) {
-
-        hwDeviceExtension->FrameBufferLength = 0x00100000;
-
-    } else {
-
-        hwDeviceExtension->FrameBufferLength = 0x00080000;
-
-    }
-
-    //
-    // Now try the same at another video memory location between 1 and 2 MEG.
-    //
-
-    VideoPortWritePortUchar(
-        (PUCHAR) (hwDeviceExtension->IoRegBaseAddress | APP_INDEX_REG), 0x1C);
-
-    if (*videoMemory == testValue) {
-
-        testValue >>= 1;
-
-    }
-
-    *videoMemory = testValue;
-
-    if (*videoMemory == testValue) {
-
-        hwDeviceExtension->FrameBufferLength = 0x00200000;
-
-    }
-
-    VideoDebugPrint((2, "XgaInitialize\n  The amount of memory on the card is %d K\n",
-                   hwDeviceExtension->FrameBufferLength >> 10));
+    ULONG modeBytes;
+    ULONG systemMinFrameBufferLength;
+    UCHAR systemBoardTypeMask;
 
     //
     // hwDeviceExtension->FrameBufferLength contains the amount of memory
@@ -1084,8 +959,35 @@ Return Value:
     hwDeviceExtension->Color = TRUE;
 
     //
-    // Now compute the number of available modes based on the infromation
-    // we found out.
+    // Compute the lowest-common-denominator constraints across every
+    // adapter discovered in the system: the smallest installed VRAM size,
+    // and the union of board types present. A mode must fit within the
+    // smallest VRAM size and must have a register table for every board
+    // type present in order to be usable on all adapters simultaneously.
+    //
+
+    systemMinFrameBufferLength = hwDeviceExtension->FrameBufferLength;
+    systemBoardTypeMask = hwDeviceExtension->BoardType;
+
+    for (j = 0; j < XgaAdapterInventoryCount; j++) {
+
+        if (XgaAdapterInventory[j].FrameBufferLength < systemMinFrameBufferLength) {
+
+            systemMinFrameBufferLength = XgaAdapterInventory[j].FrameBufferLength;
+
+        }
+
+        systemBoardTypeMask |= XgaAdapterInventory[j].BoardType;
+
+    }
+
+    VideoDebugPrint((1, "XgaInitialize: system-wide min VRAM = %d K, board type mask = 0x%x\n",
+                     systemMinFrameBufferLength >> 10, systemBoardTypeMask));
+
+    //
+    // Now compute the number of available modes based on the information
+    // we found out - constrained to what every adapter in the system can
+    // support, not just this one.
     //
 
     hwDeviceExtension->NumAvailableModes = 0;
@@ -1094,34 +996,19 @@ Return Value:
 
         XgaModes[i].modeInformation.ModeIndex = i;
 
-        //
-        // For framebuffer mode, we must stretch scan lines to 1024.
-        // This means 800x600 requires 1 MEG.
-        //
-
-        if (framebufMode) {
-
-            if (XgaModes[i].modeInformation.ScreenStride > 1024) {
-
-                XgaModes[i].modeInformation.ScreenStride = 2048;
-
-            } else {
-
-                XgaModes[i].modeInformation.ScreenStride = 1024;
-
-            }
-        }
+        modeBytes = XgaModes[i].modeInformation.ScreenStride *
+                    XgaModes[i].modeInformation.VisScreenHeight;
 
         //
-        // If the right amount of memory and the right board type is present ...
+        // The mode must fit in both this adapter's own memory and the
+        // smallest memory size found anywhere in the system.
         //
 
-        if (XgaModes[i].modeInformation.ScreenStride *
-            XgaModes[i].modeInformation.VisScreenHeight <=
-               hwDeviceExtension->FrameBufferLength) {
+        if ( (modeBytes <= hwDeviceExtension->FrameBufferLength) &&
+             (modeBytes <= systemMinFrameBufferLength) ) {
 
             //
-            // Check we have the right type of board.
+            // Check that this adapter itself can run the mode ...
             //
 
             if ( (XgaModes[i].Xga1Mode &&
@@ -1129,20 +1016,32 @@ Return Value:
                  (XgaModes[i].Xga2Mode &&
                      (hwDeviceExtension->BoardType & XGA_TYPE_2)) ) {
 
-                color = XgaModes[i].modeInformation.AttributeFlags &
-                        VIDEO_MODE_COLOR;
-
                 //
-                // check that both the mode and what we support is the same
-                // in terms of color.
+                // ... and that every adapter type present anywhere in the
+                // system has a register table for this mode. If, say, an
+                // XGA-1 is present elsewhere in the machine, a mode that
+                // only has an Xga2Mode table is rejected everywhere, even
+                // on an XGA-2 card that could otherwise run it.
                 //
 
-                if ( (color && (ULONG)hwDeviceExtension->Color) ||  // color
-                     (color == (ULONG)hwDeviceExtension->Color) ) { // monochrome
+                if ( ((systemBoardTypeMask & XGA_TYPE_1) ? (XgaModes[i].Xga1Mode != NULL) : TRUE) &&
+                     ((systemBoardTypeMask & XGA_TYPE_2) ? (XgaModes[i].Xga2Mode != NULL) : TRUE) ) {
 
-                    hwDeviceExtension->Valid[i] = TRUE;
-                    hwDeviceExtension->NumAvailableModes++;
+                    color = XgaModes[i].modeInformation.AttributeFlags &
+                            VIDEO_MODE_COLOR;
 
+                    //
+                    // check that both the mode and what we support is the same
+                    // in terms of color.
+                    //
+
+                    if ( (color && (ULONG)hwDeviceExtension->Color) ||  // color
+                         (color == (ULONG)hwDeviceExtension->Color) ) { // monochrome
+
+                        hwDeviceExtension->Valid[i] = TRUE;
+                        hwDeviceExtension->NumAvailableModes++;
+
+                    }
                 }
             }
         }
@@ -1166,7 +1065,7 @@ Return Value:
 
 } // end XgaInitialize()
 
-
+
 VP_STATUS
 XgaGetRegistryParamaterCallback(
     PVOID HwDeviceExtension,
@@ -1211,7 +1110,7 @@ Environment:
 
 }
 
-
+
 BOOLEAN
 XgaStartIO(
     PVOID HwDeviceExtension,
@@ -1421,20 +1320,6 @@ virtual = %x\n length = %x\n framebase = %x\n frameLength = %x\n",
                                 ((PVIDEO_MODE)RequestPacket->InputBuffer)->
                                 RequestedMode);
 
-            if (status == NO_ERROR) {
-
-                if (framebufMode) {
-
-                    //
-                    // If we are in framebuf mode, which means we
-                    // are running in 64K,
-                    // then switch to VGA decode
-                    //
-
-                    XGAOUT(APP_CTL_REG, 0x1);
-
-                }
-            }
         }
 
         break;
@@ -1481,18 +1366,6 @@ virtual = %x\n length = %x\n framebase = %x\n frameLength = %x\n",
             sizeof(VIDEO_XGA_COPROCESSOR_INFORMATION)) ) {
 
             status = ERROR_INSUFFICIENT_BUFFER;
-            break;
-
-        }
-
-        //
-        // If we decided to run in framebuffer mode, then fail mapping the
-        // coprocessor
-        //
-
-        if (framebufMode) {
-
-            status = ERROR_INVALID_PARAMETER;
             break;
 
         }
@@ -1592,7 +1465,7 @@ virtual = %x\n length = %x\n framebase = %x\n frameLength = %x\n",
 
 } // end XgaStartIO()
 
-
+
 VP_STATUS
 XgaSetMode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
@@ -1663,30 +1536,8 @@ Return Value:
             VideoPortWritePortUchar(indexRegister,
                                     modeTable->IndexPort);
 
-            //
-            // For framebuffer mode, we must stretch scan lines to 1024.
-            // The Map wodth is the number of bytes divided by 8.
-            //
-
-            //
-            // NOTE *** !!!
-            // The bitmap width must be 1024 bytes wide for the VGA 256.
-            // This matches the change we put in the banking code.
-            //
-
-            if ( (framebufMode) &&
-                 (modeTable->IndexPort == DISPLAY_PIXEL_MAP_WIDTH_LOW) ) {
-
-                VideoPortWritePortUchar(indexRegister + 1,
-                                        (UCHAR) (XgaModes[ModeNum].modeInformation.ScreenStride
-                                            / 8));
-
-            } else {
-
-                VideoPortWritePortUchar(indexRegister + 1,
-                                        modeTable->Data);
-
-            }
+            VideoPortWritePortUchar(indexRegister + 1,
+                                    modeTable->Data);
 
             break;
 
@@ -1726,7 +1577,7 @@ Return Value:
 
 } // end XgaSetMode();
 
-
+
 VP_STATUS
 XgaGetBankSelectCode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
@@ -1800,12 +1651,6 @@ Return Value:
     BankSelect->BankingType = VideoBanked1RW;
     BankSelect->Granularity = 0x10000;
 
-    //
-    // NOTE *** !!!
-    // The bitmap width must be 1024 bytes wide for the VGA 256.
-    // This matches the change we put in the mode initializatio code.
-    //
-
     BankSelect->BitmapWidthInBytes =
         XgaModes[HwDeviceExtension->CurrentMode].modeInformation.ScreenStride;
 
@@ -1862,7 +1707,7 @@ Return Value:
 
 } // end XgaGetBankSelectCode()
 
-
+
 //
 // Set of registers needed to reset the XGA in standart VGA mode.
 //
